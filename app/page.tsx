@@ -136,10 +136,18 @@ export default function Home() {
           <p className="trust-note"><ShieldCheck aria-hidden="true" /> 屋久島に根ざす観光サービス。関連会社はキューブ株式会社です。</p>
         </div>
 
-        <div className="hero-visual">
-          <img src="/kmcube-journey.png" alt="森の道を走る黄色い車と、カフェ、宿を描いた屋久島の手描き風景" />
-          <div className="visual-badge"><Leaf aria-hidden="true" /><span>めぐる・ひと息・泊まる<br /><strong>島の旅をまるごと</strong></span></div>
-          <p className="pencil-note">One happy island trip!</p>
+        <div className="hero-visual map-hero">
+          <div className="map-panel">
+            <p className="map-kicker"><MapPin aria-hidden="true" /> KMCUBE ISLAND MAP</p>
+            <img className="map-illustration" src="/yakushima-map.png" alt="森、山、滝、川、温泉、港を描いた手描きの屋久島マップ" />
+            <span className="island-label label-nagata">永田</span>
+            <span className="island-label label-miyanoura">宮之浦</span>
+            <span className="island-label label-anbo">安房</span>
+            <span className="island-label label-onoaida">尾之間</span>
+            <div className="driving-car" aria-hidden="true"><img src="/yellow-car.png" alt="" /></div>
+          </div>
+          <div className="visual-badge"><Leaf aria-hidden="true" /><span>車でぐるり、島めぐり<br /><strong>旅の楽しさをまるごと</strong></span></div>
+          <p className="pencil-note">Drive around Yakushima!</p>
         </div>
       </section>
 
