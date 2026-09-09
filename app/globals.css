@@ -44,6 +44,11 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--ring); outline-
 .site-header nav a { position: relative; }
 .site-header nav a::after { content: ''; position: absolute; left: 0; right: 100%; bottom: -8px; height: 2px; background: var(--accent); transition: right .25s ease; }
 .site-header nav a:hover::after { right: 0; }
+.header-actions { display: flex; align-items: center; gap: 10px; }
+.language-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 13px; color: var(--primary); background: #fffdf7; border: 1px solid #b9cec6; border-radius: 999px; box-shadow: 0 5px 14px rgba(29,89,73,.08); cursor: pointer; font: inherit; font-size: .78rem; font-weight: 850; transition: transform .2s ease, border-color .2s ease, background .2s ease; }
+.language-toggle svg { width: 16px; height: 16px; }
+.language-toggle:hover { background: #f8edbd; border-color: #d9b83e; transform: translateY(-2px); }
+.short-label { display: none; }
 .nav-cta, .button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; border-radius: 999px; font-weight: 800; transition: transform .2s ease, box-shadow .2s ease; }
 .nav-cta { padding: 13px 19px; color: #fff; background: var(--primary); font-size: .86rem; }
 .nav-cta svg, .button svg { width: 17px; }
@@ -64,6 +69,13 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--ring); outline-
 .trust-note { display: flex; align-items: center; gap: 8px; margin-top: 32px; color: #647e74; font-size: .83rem; }
 .trust-note svg { width: 18px; color: #6b9b5f; }
 .trust-note span { color: #79a866; }
+html[lang="en"] body { font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif; }
+html[lang="en"] .hero h1 { font-size: clamp(3rem, 5.3vw, 5rem); letter-spacing: -.045em; }
+html[lang="en"] .hero h1 em { font-size: .48em; line-height: 1.25; }
+html[lang="en"] .eyebrow { letter-spacing: .08em; }
+html[lang="en"] .service-copy { min-height: 108px; }
+html[lang="en"] .about-note p { padding: 0 28px; font-size: 1.15rem; }
+html[lang="en"] .about-note strong { font-size: 1.55rem; }
 .journey-card { position: relative; min-height: 460px; overflow: hidden; padding: 52px 42px; color: #fffdf5; background: var(--primary); border-radius: 42% 58% 44% 56% / 36% 41% 59% 64%; transform: rotate(1.5deg); box-shadow: 24px 30px 0 #dce7ca; }
 .journey-card::before, .journey-card::after { content: ''; position: absolute; border: 1px solid rgba(255,255,255,.15); border-radius: 50%; }
 .journey-card::before { width: 310px; height: 310px; right: -130px; top: -75px; }
@@ -252,9 +264,13 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   footer { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 620px) {
-  .site-header { width: min(100% - 28px, 1180px); height: 75px; }
+  .site-header { width: min(100% - 28px, 1180px); height: 75px; gap: 10px; }
+  .header-actions { gap: 7px; }
+  .language-toggle { min-height: 40px; padding: 0 10px; font-size: .72rem; }
   .nav-cta { padding: 11px 14px; font-size: .77rem; }
   .site-header .nav-cta svg { display: none; }
+  .full-label { display: none; }
+  .short-label { display: inline; }
   .brand small { display: none; }
   .hero { width: min(100% - 28px, 1180px); padding: 54px 0 130px; }
   .hero h1 { font-size: clamp(3rem, 15vw, 4.5rem); }
@@ -298,6 +314,8 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .closing { align-items: flex-start; flex-direction: column; padding: 90px 0; }
   footer { grid-template-columns: 1fr; gap: 18px; }
   footer > div { flex-wrap: wrap; }
+  html[lang="en"] .hero h1 { font-size: clamp(2.9rem, 14vw, 4.25rem); }
+  html[lang="en"] .service-copy { min-height: 0; }
 }
 @media (max-width: 420px) {
   .site-header { width: calc(100% - 24px); gap: 10px; }
