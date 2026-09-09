@@ -102,6 +102,10 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--ring); outline-
 .label-miyanoura { right: 10%; top: 17%; background: #f8cd51; border-color: #e4b932; }
 .label-anbo { right: 9%; top: 52%; background: #f8cd51; border-color: #e4b932; }
 .label-onoaida { left: 42%; bottom: 8%; }
+.nagata-wildlife { position: absolute; z-index: 7; left: 5%; top: 33%; width: 25%; height: 18%; pointer-events: none; }
+.nagata-wildlife img { position: absolute; display: block; height: auto; filter: drop-shadow(0 4px 4px rgba(20,52,44,.22)); }
+.wildlife-deer { left: 0; bottom: 0; width: 58%; transform: rotate(-3deg); }
+.wildlife-monkey { right: 0; bottom: 2%; width: 47%; transform: rotate(3deg); }
 .driving-car { position: absolute; z-index: 12; left: 0; top: 0; width: 62px; offset-path: ellipse(34.5% 37.5% at 50% 51%); offset-rotate: auto; animation: drive-island 16s linear infinite; filter: drop-shadow(0 6px 5px rgba(20,52,44,.28)); }
 .driving-car img { display: block; width: 100%; animation: car-bob .7s ease-in-out infinite alternate; }
 @keyframes drive-island { from { offset-distance: 0%; } to { offset-distance: 100%; } }
@@ -254,11 +258,15 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .map-kicker { top: 17px; left: 25px; font-size: .52rem; }
   .driving-car { width: 48px; offset-path: ellipse(34% 36.5% at 50% 51%); }
   .island-label { padding: 4px 7px; font-size: .57rem; }
+  .nagata-wildlife { left: 5%; top: 34%; width: 27%; height: 17%; }
   .hero-visual .pencil-note { left: -8px; }
-  .visual-badge { left: -8px; bottom: 8px; }
+  .visual-badge { left: -8px; bottom: 8px; max-width: calc(100% - 8px); padding: 13px 16px; }
+  .visual-badge span { font-size: .7rem; }
+  .visual-badge strong { font-size: .88rem; }
   .booking-bar { grid-template-columns: 1fr; width: min(100% - 28px, 1180px); padding: 24px; }
   .booking-intro { grid-column: auto; }
   .booking-bar .button { width: 100%; }
+  .booking-bar input, .booking-bar select { font-size: 1rem; }
   .booking-dialog { padding: 23px !important; }
   .booking-summary div { grid-template-columns: 1fr; gap: 5px; }
   .section { width: min(100% - 28px, 1180px); padding: 88px 0; }
@@ -282,5 +290,24 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .closing { align-items: flex-start; flex-direction: column; padding: 90px 0; }
   footer { grid-template-columns: 1fr; gap: 18px; }
   footer > div { flex-wrap: wrap; }
+}
+@media (max-width: 420px) {
+  .site-header { width: calc(100% - 24px); gap: 10px; }
+  .brand { gap: 8px; }
+  .brand-mark { width: 38px; height: 38px; }
+  .brand strong { font-size: 1.05rem; }
+  .nav-cta { padding: 10px 12px; font-size: .72rem; }
+  .hero { width: calc(100% - 24px); padding-top: 42px; }
+  .hero h1 { font-size: clamp(2.75rem, 14.5vw, 3.7rem); }
+  .hero-actions .button { width: 100%; }
+  .hero-visual { width: 100%; min-height: 400px; }
+  .map-panel { min-height: 400px; }
+  .map-illustration { width: 88%; height: 82%; left: 6%; top: 10%; }
+  .label-nagata { left: 8%; top: 28%; }
+  .label-miyanoura { right: 6%; }
+  .label-anbo { right: 5%; }
+  .nagata-wildlife { left: 2%; top: 34%; width: 29%; height: 16%; }
+  .driving-car { width: 43px; }
+  .visual-badge { left: -3px; border-width: 4px; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } .driving-car { animation: none !important; offset-distance: 14%; } .driving-car img { animation: none !important; } }

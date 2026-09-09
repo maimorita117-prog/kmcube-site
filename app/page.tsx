@@ -141,6 +141,10 @@ export default function Home() {
             <p className="map-kicker"><MapPin aria-hidden="true" /> KMCUBE ISLAND MAP</p>
             <img className="map-illustration" src="/yakushima-map-transparent.png" alt="森、山、滝、川、温泉、港を描いた手描きの屋久島マップ" />
             <span className="island-label label-nagata">永田</span>
+            <div className="nagata-wildlife" aria-label="永田周辺のヤクシカとヤクシマザル">
+              <img className="wildlife-deer" src="/yakushika-deer.png" alt="手描きのヤクシカ" />
+              <img className="wildlife-monkey" src="/yakushima-macaque.png" alt="手描きのヤクシマザル" />
+            </div>
             <span className="island-label label-miyanoura">宮之浦</span>
             <span className="island-label label-anbo">安房</span>
             <span className="island-label label-onoaida">尾之間</span>
