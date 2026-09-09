@@ -96,21 +96,21 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--ring); outline-
 .map-panel::after { content: ''; position: absolute; width: 145px; height: 145px; left: -28px; bottom: -35px; border-radius: 50%; background: #f8dd78; opacity: .55; }
 .map-kicker { position: absolute; z-index: 4; top: 23px; left: 44px; display: flex; align-items: center; gap: 6px; margin: 0; color: #397064; font-family: Arial, sans-serif; font-size: .61rem; font-weight: 900; letter-spacing: .16em; }
 .map-kicker svg { width: 14px; }
-.map-illustration { position: relative; z-index: 2; display: block; width: 96%; height: 98%; margin: 0 auto; object-fit: contain; filter: drop-shadow(0 14px 18px rgba(24,63,53,.13)); }
-.island-label { position: absolute; z-index: 5; padding: 5px 10px; color: #173f35; background: rgba(255,253,245,.92); border: 1px solid #b9cec6; border-radius: 999px; box-shadow: 0 4px 10px rgba(29,89,73,.12); font-size: .67rem; font-weight: 850; }
-.label-nagata { left: 5%; top: 28%; }
-.label-miyanoura { right: 3%; top: 16%; background: #f8cd51; border-color: #e4b932; }
-.label-anbo { right: 2%; top: 52%; background: #f8cd51; border-color: #e4b932; }
-.label-onoaida { left: 39%; bottom: 2%; }
-.driving-car { position: absolute; z-index: 7; left: 0; top: 0; width: 76px; offset-path: ellipse(39% 42% at 50% 51%); offset-rotate: auto; animation: drive-island 16s linear infinite; filter: drop-shadow(0 6px 5px rgba(20,52,44,.28)); }
+.map-illustration { position: absolute; z-index: 2; display: block; width: 84%; height: 84%; left: 8%; top: 8%; object-fit: contain; filter: drop-shadow(0 14px 18px rgba(24,63,53,.13)); }
+.island-label { position: absolute; z-index: 9; padding: 5px 10px; color: #173f35; background: rgba(255,253,245,.94); border: 1px solid #b9cec6; border-radius: 999px; box-shadow: 0 4px 10px rgba(29,89,73,.12); font-size: .67rem; font-weight: 850; }
+.label-nagata { left: 11%; top: 28%; }
+.label-miyanoura { right: 10%; top: 17%; background: #f8cd51; border-color: #e4b932; }
+.label-anbo { right: 9%; top: 52%; background: #f8cd51; border-color: #e4b932; }
+.label-onoaida { left: 42%; bottom: 8%; }
+.driving-car { position: absolute; z-index: 12; left: 0; top: 0; width: 62px; offset-path: ellipse(34.5% 37.5% at 50% 51%); offset-rotate: auto; animation: drive-island 16s linear infinite; filter: drop-shadow(0 6px 5px rgba(20,52,44,.28)); }
 .driving-car img { display: block; width: 100%; animation: car-bob .7s ease-in-out infinite alternate; }
 @keyframes drive-island { from { offset-distance: 0%; } to { offset-distance: 100%; } }
 @keyframes car-bob { from { transform: translateY(-1px) rotate(-1deg); } to { transform: translateY(2px) rotate(1deg); } }
-.visual-badge { position: absolute; display: flex; align-items: center; gap: 12px; left: -26px; bottom: 30px; padding: 15px 20px; color: #fff; background: var(--primary); border: 5px solid #f7f4e9; border-radius: 18px 26px 19px 29px; transform: rotate(-3deg); box-shadow: 0 10px 24px rgba(20,54,45,.15); }
+.visual-badge { position: absolute; z-index: 40; display: flex; align-items: center; gap: 12px; left: -10px; bottom: 26px; padding: 15px 20px; color: #fff; background: var(--primary); border: 5px solid #f7f4e9; border-radius: 18px 26px 19px 29px; transform: rotate(-3deg); box-shadow: 0 10px 24px rgba(20,54,45,.15); }
 .visual-badge svg { width: 25px; }
 .visual-badge span { font-size: .74rem; line-height: 1.6; }
 .visual-badge strong { font-size: .94rem; }
-.hero-visual .pencil-note { position: absolute; z-index: 8; top: 10px; left: -24px; padding: 7px 14px; color: #17493d; background: #f8cd51; font-size: .86rem; }
+.hero-visual .pencil-note { position: absolute; z-index: 30; top: 10px; left: -24px; padding: 7px 14px; color: #17493d; background: #f8cd51; font-size: .86rem; }
 .pencil-note { width: max-content; margin: 0; font-family: "Segoe Print", "Bradley Hand", cursive; font-weight: 700; transform: rotate(-4deg); }
 
 .booking-dialog { max-width: 520px !important; padding: 30px !important; color: var(--foreground); background: #fffdf5 !important; border: 1px solid #c7d5b3; border-radius: 28px !important; }
@@ -252,10 +252,10 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .hero-visual { width: 94%; min-height: 430px; }
   .map-panel { min-height: 430px; padding: 35px 8px 10px; border-radius: 34px 47px 39px 50px; }
   .map-kicker { top: 17px; left: 25px; font-size: .52rem; }
-  .driving-car { width: 55px; offset-path: ellipse(39% 41% at 50% 51%); }
+  .driving-car { width: 48px; offset-path: ellipse(34% 36.5% at 50% 51%); }
   .island-label { padding: 4px 7px; font-size: .57rem; }
   .hero-visual .pencil-note { left: -8px; }
-  .visual-badge { left: -12px; bottom: -15px; }
+  .visual-badge { left: -8px; bottom: 8px; }
   .booking-bar { grid-template-columns: 1fr; width: min(100% - 28px, 1180px); padding: 24px; }
   .booking-intro { grid-column: auto; }
   .booking-bar .button { width: 100%; }
