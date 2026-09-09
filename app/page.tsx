@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import {
   ArrowDown, ArrowRight, BedDouble, CalendarDays, CarFront, Check,
   Coffee, ExternalLink, Footprints, Heart, Kayak, Leaf, MapPin,
@@ -57,6 +57,94 @@ const carLabels: Record<string, string> = {
   compact: 'コンパクト', kei: '軽自動車', any: 'おすすめを相談',
 };
 
+const desktopDriveRoute = [
+  { x: .78, y: .59 }, { x: .87, y: .76 }, { x: .13, y: .79 },
+  { x: .12, y: .70 }, { x: .88, y: .76 }, { x: .84, y: .69 },
+  { x: .11, y: .78 }, { x: .14, y: .70 }, { x: .87, y: .78 },
+  { x: .76, y: .70 },
+];
+
+const mobileDriveRoute = [
+  { x: .74, y: .76 }, { x: .82, y: .82 }, { x: .12, y: .82 },
+  { x: .16, y: .76 }, { x: .82, y: .81 }, { x: .76, y: .75 },
+  { x: .10, y: .82 }, { x: .16, y: .76 }, { x: .82, y: .82 },
+  { x: .72, y: .76 },
+];
+
+function ScrollDriveCar() {
+  const carRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const car = carRef.current;
+    if (!car) return;
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let frame = 0;
+    let stopTimer = 0;
+
+    const renderPosition = () => {
+      frame = 0;
+      if (reducedMotion.matches) {
+        car.style.setProperty('--drive-opacity', '0');
+        return;
+      }
+
+      const scrollRange = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      const progress = Math.min(1, Math.max(0, window.scrollY / scrollRange));
+      const route = window.innerWidth <= 620 ? mobileDriveRoute : desktopDriveRoute;
+      const routePosition = progress * (route.length - 1);
+      const segment = Math.min(route.length - 2, Math.floor(routePosition));
+      const localProgress = routePosition - segment;
+      const eased = localProgress * localProgress * (3 - 2 * localProgress);
+      const from = route[segment];
+      const to = route[segment + 1];
+      const x = from.x + (to.x - from.x) * eased;
+      const y = from.y + (to.y - from.y) * eased;
+      const facing = to.x >= from.x ? 1 : -1;
+      const tilt = Math.max(-4, Math.min(4, (to.y - from.y) * 22));
+      const bob = Math.sin(progress * Math.PI * 48) * 2;
+      const fadeIn = Math.min(1, Math.max(0, (progress - .002) / .018));
+      const fadeOut = Math.min(1, Math.max(0, (1 - progress) / .035));
+
+      car.style.setProperty('--drive-x', `${x * window.innerWidth}px`);
+      car.style.setProperty('--drive-y', `${y * window.innerHeight}px`);
+      car.style.setProperty('--drive-facing', String(facing));
+      car.style.setProperty('--drive-tilt', `${tilt}deg`);
+      car.style.setProperty('--drive-bob', `${bob}px`);
+      car.style.setProperty('--drive-opacity', String(fadeIn * fadeOut));
+    };
+
+    const scheduleRender = () => {
+      car.classList.add('is-moving');
+      window.clearTimeout(stopTimer);
+      stopTimer = window.setTimeout(() => car.classList.remove('is-moving'), 180);
+      if (!frame) frame = window.requestAnimationFrame(renderPosition);
+    };
+
+    const handlePreferenceChange = () => renderPosition();
+    window.addEventListener('scroll', scheduleRender, { passive: true });
+    window.addEventListener('resize', scheduleRender);
+    reducedMotion.addEventListener('change', handlePreferenceChange);
+    renderPosition();
+
+    return () => {
+      window.removeEventListener('scroll', scheduleRender);
+      window.removeEventListener('resize', scheduleRender);
+      reducedMotion.removeEventListener('change', handlePreferenceChange);
+      window.clearTimeout(stopTimer);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  return (
+    <div className="scroll-drive-car" ref={carRef} aria-hidden="true">
+      <span className="scroll-drive-caption">ゆっくり安全運転中</span>
+      <span className="scroll-car-dust"><i /><i /><i /></span>
+      <span className="scroll-car-vehicle"><img src="/yellow-car-transparent.png" alt="" /></span>
+    </div>
+  );
+}
+
 export default function Home() {
   const [booking, setBooking] = useState<Booking>({ start: '', end: '', arrival: 'airport', car: 'any' });
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -110,6 +198,7 @@ export default function Home() {
 
   return (
     <main>
+      <ScrollDriveCar />
       <header className="site-header">
         <a className="brand" href="#top" aria-label="KMCUBE ホーム">
           <span className="brand-mark"><Leaf aria-hidden="true" /></span>
@@ -148,7 +237,6 @@ export default function Home() {
             <span className="island-label label-miyanoura">宮之浦</span>
             <span className="island-label label-anbo">安房</span>
             <span className="island-label label-onoaida">尾之間</span>
-            <div className="driving-car" aria-hidden="true"><img src="/yellow-car-transparent.png" alt="" /></div>
           </div>
           <div className="visual-badge"><Leaf aria-hidden="true" /><span>車でぐるり、島めぐり<br /><strong>旅の楽しさをまるごと</strong></span></div>
           <p className="pencil-note">Drive around Yakushima!</p>
