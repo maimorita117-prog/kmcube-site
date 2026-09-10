@@ -24,7 +24,7 @@ declare global {
   interface Document { modelContext?: WebMcpContext }
 }
 
-const rentalBookingUrl = 'https://yakushima-tomo-drive.ume-1228.chatgpt.site/';
+const rentalBookingUrl = 'https://hp-cube.sakura.ne.jp/rentalcar/';
 
 const serviceMeta = [
   { number: '01', icon: CarFront, kicker: 'RENT A CAR', tone: 'yellow' },
