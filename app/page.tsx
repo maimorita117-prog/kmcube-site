@@ -307,9 +307,8 @@ export default function Home() {
     <main>
       <ScrollDriveCar caption={t.driveCaption} />
       <header className="site-header">
-        <a className="brand" href="#top" aria-label={t.homeLabel}>
-          <span className="brand-mark"><Leaf aria-hidden="true" /></span>
-          <span><strong>KMCUBE</strong><small>YAKUSHIMA TRAVEL</small></span>
+        <a className="brand brand-logo" href="#top" aria-label={t.homeLabel}>
+          <img src="./kmcube-logo-transparent.png" alt="KMCUBE YAKUSHIMA・ADVENTURES" width="610" height="603" />
         </a>
         <nav aria-label={t.navLabel}>
           <a href="#services">{t.nav[0]}</a>
@@ -469,7 +468,7 @@ export default function Home() {
       </section>
 
       <footer>
-        <a className="brand footer-brand" href="#top"><span className="brand-mark"><Leaf aria-hidden="true" /></span><span><strong>KMCUBE</strong><small>YAKUSHIMA TRAVEL</small></span></a>
+        <a className="brand brand-logo footer-brand" href="#top" aria-label={t.homeLabel}><img src="./kmcube-logo-transparent.png" alt="KMCUBE YAKUSHIMA・ADVENTURES" width="610" height="603" /></a>
         <p>{t.footerTagline}</p>
         <div><a href="#services">{t.footerLinks[0]}</a><a href="#company">{t.footerLinks[1]}</a><a href="https://nn-cube.com" target="_blank" rel="noreferrer">{t.footerLinks[2]}</a></div>
         <small>© {new Date().getFullYear()} KMCUBE</small>
