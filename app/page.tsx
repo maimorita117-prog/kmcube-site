@@ -25,6 +25,11 @@ declare global {
 }
 
 const rentalBookingUrl = 'https://hp-cube.sakura.ne.jp/rentalcar/';
+const rentalBookingLinkProps = {
+  href: rentalBookingUrl,
+  target: '_blank',
+  rel: 'noopener noreferrer',
+} as const;
 
 const serviceMeta = [
   { number: '01', icon: CarFront, kicker: 'RENT A CAR', tone: 'yellow' },
@@ -272,7 +277,7 @@ export default function Home() {
           <button className="language-toggle" type="button" onClick={switchLanguage} aria-label={t.switchLabel}>
             <Globe2 aria-hidden="true" /><span>{language === 'ja' ? 'EN' : '日本語'}</span>
           </button>
-          <a className="nav-cta" href={rentalBookingUrl}><span className="full-label">{t.navBooking}</span><span className="short-label">{t.navBookingShort}</span> <ArrowRight aria-hidden="true" /></a>
+          <a className="nav-cta" {...rentalBookingLinkProps}><span className="full-label">{t.navBooking}</span><span className="short-label">{t.navBookingShort}</span> <ArrowRight aria-hidden="true" /></a>
         </div>
       </header>
 
@@ -282,7 +287,7 @@ export default function Home() {
           <h1>{t.heroLine1}<br />{t.heroLine2}<br /><em>{t.heroLine3}</em></h1>
           <p className="hero-lead">{t.heroLead}</p>
           <div className="hero-actions">
-            <a className="button button-primary" href={rentalBookingUrl}>{t.checkCars} <ArrowRight aria-hidden="true" /></a>
+            <a className="button button-primary" {...rentalBookingLinkProps}>{t.checkCars} <ArrowRight aria-hidden="true" /></a>
             <a className="text-link" href="#services">{t.seeServices} <ArrowDown aria-hidden="true" /></a>
           </div>
           <p className="trust-note"><ShieldCheck aria-hidden="true" /> {t.trust}</p>
@@ -312,7 +317,7 @@ export default function Home() {
           <div><p>RENT A CAR</p><h2 id="booking-title">{t.bookingTitle}</h2></div>
         </div>
         <p className="booking-link-copy">{t.bookingLinkCopy}</p>
-        <a className="button button-accent" href={rentalBookingUrl}>{t.bookingLinkButton} <ArrowRight aria-hidden="true" /></a>
+        <a className="button button-accent" {...rentalBookingLinkProps}>{t.bookingLinkButton} <ArrowRight aria-hidden="true" /></a>
       </aside>
 
       <section className="section services" id="services">
@@ -343,7 +348,7 @@ export default function Home() {
           <p className="section-kicker light">ONE STOP JOURNEY</p>
           <h2>{t.journeyTitle1}<br />{t.journeyTitle2}</h2>
           <p>{t.journeyCopy}</p>
-          <a className="button button-sun" href={rentalBookingUrl}>{t.journeyCta} <ArrowRight aria-hidden="true" /></a>
+          <a className="button button-sun" {...rentalBookingLinkProps}>{t.journeyCta} <ArrowRight aria-hidden="true" /></a>
         </div>
         <ol className="day-route">
           <li><span>10:00</span><div><CarFront aria-hidden="true" /><b>{t.route[0].title}</b><small>{t.route[0].note}</small></div></li>
@@ -396,7 +401,7 @@ export default function Home() {
 
       <section className="closing">
         <div><p className="pencil-note dark-note">See you in Yakushima!</p><h2>{t.closingTitle1}<br />{t.closingTitle2}</h2><p>{t.closingCopy}</p></div>
-        <a className="button button-accent" href={rentalBookingUrl}>{t.checkCars} <ArrowRight aria-hidden="true" /></a>
+        <a className="button button-accent" {...rentalBookingLinkProps}>{t.checkCars} <ArrowRight aria-hidden="true" /></a>
       </section>
 
       <footer>
