@@ -1,25 +1,13 @@
 'use client';
 
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowDown, ArrowRight, BedDouble, CalendarDays, CarFront, Check,
+  ArrowDown, ArrowRight, BedDouble, CarFront, Check,
   Coffee, ExternalLink, Footprints, Globe2, Heart, Kayak, Leaf, MapPin,
-  MessageCircleHeart, ShieldCheck, Sparkles, Waves,
+  MessageCircleHeart, ShieldCheck, Waves,
 } from 'lucide-react';
-import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog';
 
 type Language = 'ja' | 'en';
-type Arrival = 'airport' | 'miyanoura' | 'anbo' | 'consult';
-type CarChoice = 'compact' | 'kei' | 'any';
-
-type Booking = {
-  start: string;
-  end: string;
-  arrival: Arrival;
-  car: CarChoice;
-};
 
 type WebMcpContext = {
   registerTool: (tool: {
@@ -35,6 +23,8 @@ type WebMcpContext = {
 declare global {
   interface Document { modelContext?: WebMcpContext }
 }
+
+const rentalBookingUrl = 'https://yakushima-tomo-drive.ume-1228.chatgpt.site/';
 
 const serviceMeta = [
   { number: '01', icon: CarFront, kicker: 'RENT A CAR', tone: 'yellow' },
@@ -55,15 +45,10 @@ const translations = {
     trust: '屋久島に根ざす観光サービス。関連会社はキューブ株式会社です。',
     mapAlt: '森、山、滝、川、温泉、港を描いた手描きの屋久島マップ', deerAlt: '手描きのヤクシカ', monkeyAlt: '手描きのヤクシマザル', wildlifeLabel: '永田周辺のヤクシカとヤクシマザル',
     places: ['永田', '宮之浦', '安房', '尾之間'], mapBadge1: '車でぐるり、島めぐり', mapBadge2: '旅の楽しさをまるごと',
-    bookingTitle: '旅程から空きを確認', startDate: '出発日', endDate: '返却日', arrivalPoint: '到着口', carPreference: '車の希望', check: '確認する',
-    arrivals: { airport: '屋久島空港周辺', miyanoura: '宮之浦港周辺', anbo: '安房港周辺', consult: '相談して決めたい' } as Record<Arrival, string>,
-    cars: { compact: 'コンパクト', kei: '軽自動車', any: 'おすすめを相談' } as Record<CarChoice, string>,
-    dialogTitle: '旅程を確認しました', dialogDescription: '予約受付の開始後、この条件で空き状況の確認からお申し込みまで進めます。',
-    usageDates: 'ご利用日', dialogArrival: '到着口', dialogCar: '車の希望', systemTitle: '予約システムはただいま準備中です',
-    systemCopy: 'お客さま情報・車両在庫・料金が確定次第、オンライン予約を開始します。', backToSite: 'サイトに戻る',
+    bookingTitle: 'オンラインレンタカー予約', bookingLinkCopy: '空車確認からお申し込みまで、専用予約サイトでお手続きいただけます。', bookingLinkButton: '予約サイトへ進む',
     servicesTitle1: '島の旅を、', servicesTitle2: 'やさしくつなぐ。', servicesIntro: '移動、休憩、宿泊を別々に探す手間を少なく。KMCUBEなら、屋久島で過ごす時間をひと続きに相談できます。',
     services: [
-      { title: 'レンタカー', copy: '到着したら、すぐに島時間へ。旅程に合わせて使いやすい一台をご案内します。', note: '予約画面を先行公開中', status: '準備中' },
+      { title: 'レンタカー', copy: '到着したら、すぐに島時間へ。旅程に合わせて使いやすい一台をご案内します。', note: 'オンラインで空車確認・予約', status: '予約受付中' },
       { title: '簡易カフェ', copy: 'ドライブの途中に、ほっとひと息。屋久島の空気と一緒に楽しむ小さな休憩所です。', note: 'メニューは近日ご案内', status: 'COMING SOON' },
       { title: '民泊', copy: 'たくさん遊んだあとは、ゆっくり休む。島で暮らすように泊まれる場所を整えています。', note: 'お部屋情報は近日ご案内', status: 'COMING SOON' },
     ],
@@ -100,15 +85,10 @@ const translations = {
     trust: 'A locally rooted travel company on Yakushima, affiliated with Cube Inc.',
     mapAlt: 'Hand-painted map of Yakushima featuring forests, mountains, waterfalls, rivers, hot springs, and ports', deerAlt: 'Hand-painted Yakushika deer', monkeyAlt: 'Hand-painted Yakushima macaque', wildlifeLabel: 'Yakushika deer and Yakushima macaque near Nagata',
     places: ['Nagata', 'Miyanoura', 'Anbo', 'Onoaida'], mapBadge1: 'Drive around the island', mapBadge2: 'Enjoy the whole journey',
-    bookingTitle: 'Check availability for your trip', startDate: 'Pick-up date', endDate: 'Return date', arrivalPoint: 'Arrival point', carPreference: 'Car preference', check: 'Check',
-    arrivals: { airport: 'Yakushima Airport area', miyanoura: 'Miyanoura Port area', anbo: 'Anbo Port area', consult: 'Help me choose' } as Record<Arrival, string>,
-    cars: { compact: 'Compact car', kei: 'Kei car', any: 'Recommend a car for me' } as Record<CarChoice, string>,
-    dialogTitle: 'Your trip details are ready', dialogDescription: 'Once bookings open, you will be able to check availability and continue with these trip details.',
-    usageDates: 'Rental dates', dialogArrival: 'Arrival point', dialogCar: 'Car preference', systemTitle: 'Online booking is coming soon',
-    systemCopy: 'Online booking will open once customer details, vehicle availability, and pricing are ready.', backToSite: 'Back to the site',
+    bookingTitle: 'Online rental car booking', bookingLinkCopy: 'Check availability and complete your request on our dedicated booking site.', bookingLinkButton: 'Go to booking site',
     servicesTitle1: 'One gentle connection', servicesTitle2: 'for your island journey.', servicesIntro: 'Spend less time arranging transport, breaks, and accommodation separately. KMCUBE helps connect your time on Yakushima through one friendly point of contact.',
     services: [
-      { title: 'Rental cars', copy: 'Start enjoying island time as soon as you arrive. We will help you find a practical car that fits your itinerary.', note: 'Booking preview now available', status: 'IN PREPARATION' },
+      { title: 'Rental cars', copy: 'Start enjoying island time as soon as you arrive. We will help you find a practical car that fits your itinerary.', note: 'Check availability and book online', status: 'BOOKING OPEN' },
       { title: 'Small café', copy: 'Pause and recharge during your drive with a small, welcoming place to enjoy the fresh island atmosphere.', note: 'Menu details coming soon', status: 'COMING SOON' },
       { title: 'Guesthouse stays', copy: 'After a full day of exploring, slow down and rest in a place that feels closer to everyday island life.', note: 'Room details coming soon', status: 'COMING SOON' },
     ],
@@ -134,9 +114,6 @@ const translations = {
     footerTagline: 'Connecting every part of your Yakushima journey.', footerLinks: ['Services', 'Company', 'Affiliate'],
   },
 } as const;
-
-const arrivalLabels = translations.ja.arrivals;
-const carLabels = translations.ja.cars;
 
 const desktopDriveRoute = [
   { x: .78, y: .59 }, { x: .87, y: .76 }, { x: .13, y: .79 },
@@ -227,8 +204,6 @@ function ScrollDriveCar({ caption }: { caption: string }) {
 }
 
 export default function Home() {
-  const [booking, setBooking] = useState<Booking>({ start: '', end: '', arrival: 'airport', car: 'any' });
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [language, setLanguage] = useState<Language>('ja');
   const t = translations[language];
 
@@ -260,48 +235,25 @@ export default function Home() {
     const context = document.modelContext;
     if (!context?.registerTool) return;
     const lifecycle = new AbortController();
-    const arrivals = Object.keys(arrivalLabels);
-    const cars = Object.keys(carLabels);
 
     const registration = context.registerTool({
-      name: 'stage_rental_car_search',
-      title: 'レンタカー検索条件を設定',
-      description: 'KMCUBEの画面に利用日・到着口・希望車種を設定し、予約準備状況の確認画面を開きます。実際の予約確定は行いません。',
+      name: 'open_rental_car_booking',
+      title: 'レンタカー予約サイトを開く',
+      description: 'KMCUBEの専用レンタカー予約サイトを開きます。',
       inputSchema: {
         type: 'object',
-        properties: {
-          start: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$', description: '出発日（YYYY-MM-DD）' },
-          end: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$', description: '返却日（YYYY-MM-DD）' },
-          arrival: { type: 'string', enum: arrivals },
-          car: { type: 'string', enum: cars },
-        },
-        required: ['start', 'end', 'arrival', 'car'],
+        properties: {},
         additionalProperties: false,
       },
       annotations: { readOnlyHint: false, untrustedContentHint: false },
-      execute(input) {
-        if (!input || typeof input !== 'object') throw new Error('検索条件が必要です。');
-        const values = input as Record<string, unknown>;
-        const datePattern = /^\d{4}-\d{2}-\d{2}$/;
-        if (typeof values.start !== 'string' || !datePattern.test(values.start)) throw new Error('出発日をYYYY-MM-DDで指定してください。');
-        if (typeof values.end !== 'string' || !datePattern.test(values.end)) throw new Error('返却日をYYYY-MM-DDで指定してください。');
-        if (values.end < values.start) throw new Error('返却日は出発日以降を指定してください。');
-        if (typeof values.arrival !== 'string' || !arrivals.includes(values.arrival)) throw new Error('到着口の指定が正しくありません。');
-        if (typeof values.car !== 'string' || !cars.includes(values.car)) throw new Error('希望車種の指定が正しくありません。');
-        const next = { start: values.start, end: values.end, arrival: values.arrival, car: values.car };
-        setBooking(next);
-        setDialogOpen(true);
-        return { status: 'staged', ...next, reservationConfirmed: false };
+      execute() {
+        window.location.assign(rentalBookingUrl);
+        return { status: 'redirecting', url: rentalBookingUrl };
       },
     }, { signal: lifecycle.signal });
     void Promise.resolve(registration).catch(() => undefined);
     return () => lifecycle.abort();
   }, []);
-
-  function checkBooking(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setDialogOpen(true);
-  }
 
   return (
     <main>
@@ -320,7 +272,7 @@ export default function Home() {
           <button className="language-toggle" type="button" onClick={switchLanguage} aria-label={t.switchLabel}>
             <Globe2 aria-hidden="true" /><span>{language === 'ja' ? 'EN' : '日本語'}</span>
           </button>
-          <a className="nav-cta" href="#reserve"><span className="full-label">{t.navBooking}</span><span className="short-label">{t.navBookingShort}</span> <ArrowRight aria-hidden="true" /></a>
+          <a className="nav-cta" href={rentalBookingUrl}><span className="full-label">{t.navBooking}</span><span className="short-label">{t.navBookingShort}</span> <ArrowRight aria-hidden="true" /></a>
         </div>
       </header>
 
@@ -330,7 +282,7 @@ export default function Home() {
           <h1>{t.heroLine1}<br />{t.heroLine2}<br /><em>{t.heroLine3}</em></h1>
           <p className="hero-lead">{t.heroLead}</p>
           <div className="hero-actions">
-            <a className="button button-primary" href="#reserve">{t.checkCars} <ArrowRight aria-hidden="true" /></a>
+            <a className="button button-primary" href={rentalBookingUrl}>{t.checkCars} <ArrowRight aria-hidden="true" /></a>
             <a className="text-link" href="#services">{t.seeServices} <ArrowDown aria-hidden="true" /></a>
           </div>
           <p className="trust-note"><ShieldCheck aria-hidden="true" /> {t.trust}</p>
@@ -354,34 +306,14 @@ export default function Home() {
         </div>
       </section>
 
-      <form className="booking-bar" id="reserve" onSubmit={checkBooking} aria-labelledby="booking-title">
+      <aside className="booking-bar booking-link-bar" id="reserve" aria-labelledby="booking-title">
         <div className="booking-intro">
           <span>01</span>
           <div><p>RENT A CAR</p><h2 id="booking-title">{t.bookingTitle}</h2></div>
         </div>
-        <label>{t.startDate}<input required type="date" value={booking.start} onChange={(e) => setBooking({ ...booking, start: e.target.value })} /></label>
-        <label>{t.endDate}<input required type="date" value={booking.end} onChange={(e) => setBooking({ ...booking, end: e.target.value })} /></label>
-        <label>{t.arrivalPoint}<select value={booking.arrival} onChange={(e) => setBooking({ ...booking, arrival: e.target.value as Arrival })}><option value="airport">{t.arrivals.airport}</option><option value="miyanoura">{t.arrivals.miyanoura}</option><option value="anbo">{t.arrivals.anbo}</option><option value="consult">{t.arrivals.consult}</option></select></label>
-        <label>{t.carPreference}<select value={booking.car} onChange={(e) => setBooking({ ...booking, car: e.target.value as CarChoice })}><option value="any">{t.cars.any}</option><option value="compact">{t.cars.compact}</option><option value="kei">{t.cars.kei}</option></select></label>
-        <button className="button button-accent" type="submit">{t.check} <ArrowRight aria-hidden="true" /></button>
-      </form>
-
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="booking-dialog">
-          <DialogHeader>
-            <span className="dialog-icon"><CalendarDays aria-hidden="true" /></span>
-            <DialogTitle>{t.dialogTitle}</DialogTitle>
-            <DialogDescription>{t.dialogDescription}</DialogDescription>
-          </DialogHeader>
-          <dl className="booking-summary">
-            <div><dt>{t.usageDates}</dt><dd>{booking.start} {language === 'ja' ? '〜' : 'to'} {booking.end}</dd></div>
-            <div><dt>{t.dialogArrival}</dt><dd>{t.arrivals[booking.arrival]}</dd></div>
-            <div><dt>{t.dialogCar}</dt><dd>{t.cars[booking.car]}</dd></div>
-          </dl>
-          <div className="system-notice"><Sparkles aria-hidden="true" /><p><strong>{t.systemTitle}</strong><br />{t.systemCopy}</p></div>
-          <button className="button button-primary dialog-button" type="button" onClick={() => setDialogOpen(false)}>{t.backToSite}</button>
-        </DialogContent>
-      </Dialog>
+        <p className="booking-link-copy">{t.bookingLinkCopy}</p>
+        <a className="button button-accent" href={rentalBookingUrl}>{t.bookingLinkButton} <ArrowRight aria-hidden="true" /></a>
+      </aside>
 
       <section className="section services" id="services">
         <div className="section-heading">
@@ -411,7 +343,7 @@ export default function Home() {
           <p className="section-kicker light">ONE STOP JOURNEY</p>
           <h2>{t.journeyTitle1}<br />{t.journeyTitle2}</h2>
           <p>{t.journeyCopy}</p>
-          <a className="button button-sun" href="#reserve">{t.journeyCta} <ArrowRight aria-hidden="true" /></a>
+          <a className="button button-sun" href={rentalBookingUrl}>{t.journeyCta} <ArrowRight aria-hidden="true" /></a>
         </div>
         <ol className="day-route">
           <li><span>10:00</span><div><CarFront aria-hidden="true" /><b>{t.route[0].title}</b><small>{t.route[0].note}</small></div></li>
@@ -464,7 +396,7 @@ export default function Home() {
 
       <section className="closing">
         <div><p className="pencil-note dark-note">See you in Yakushima!</p><h2>{t.closingTitle1}<br />{t.closingTitle2}</h2><p>{t.closingCopy}</p></div>
-        <a className="button button-accent" href="#reserve">{t.checkCars} <ArrowRight aria-hidden="true" /></a>
+        <a className="button button-accent" href={rentalBookingUrl}>{t.checkCars} <ArrowRight aria-hidden="true" /></a>
       </section>
 
       <footer>

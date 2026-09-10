@@ -99,6 +99,8 @@ html[lang="en"] .about-note strong { font-size: 1.55rem; }
 .booking-bar input, .booking-bar select { width: 100%; min-height: 42px; padding: 0 8px; color: var(--foreground); background: transparent; border: 0; border-bottom: 1px solid #b8c5b2; border-radius: 0; font: inherit; font-size: .87rem; }
 .booking-bar input:focus, .booking-bar select:focus { outline: 2px solid var(--ring); outline-offset: 3px; }
 .booking-bar .button { min-height: 49px; white-space: nowrap; }
+.booking-link-bar { grid-template-columns: minmax(250px, .95fr) minmax(260px, 1.35fr) auto; align-items: center; }
+.booking-link-copy { margin: 0; color: #536f65; font-size: .93rem; line-height: 1.8; }
 .hero-visual { position: relative; align-self: stretch; min-height: 540px; }
 .hero-visual::after { content: ''; position: absolute; z-index: -1; width: 86%; height: 88%; right: -5%; bottom: -4%; border-radius: 48% 52% 44% 56%; background: #dce7ca; transform: rotate(5deg); }
 .map-panel { position: relative; width: 100%; height: 100%; min-height: 540px; overflow: hidden; padding: 42px 22px 18px; background: #eaf4ee; border: 1px solid #c9d9cc; border-radius: 43% 57% 46% 54% / 34% 39% 61% 66%; box-shadow: 0 24px 52px rgba(26,62,51,.15); }
@@ -246,7 +248,10 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .hero-visual { width: min(620px, 92%); min-height: 560px; margin: 10px auto 0; }
   .map-panel { min-height: 560px; }
   .booking-bar { grid-template-columns: 1fr 1fr; }
+  .booking-link-bar { grid-template-columns: auto 1fr; }
   .booking-intro { grid-column: 1 / -1; }
+  .booking-link-bar .booking-intro { grid-column: auto; }
+  .booking-link-bar .button { grid-column: 1 / -1; justify-self: stretch; }
   .booking-bar .button { width: 100%; }
   .section { padding: 110px 0; }
   .section-heading { grid-template-columns: 1fr; gap: 26px; }
@@ -287,6 +292,7 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .visual-badge span { font-size: .7rem; }
   .visual-badge strong { font-size: .88rem; }
   .booking-bar { grid-template-columns: 1fr; width: min(100% - 28px, 1180px); padding: 24px; }
+  .booking-link-bar { grid-template-columns: 1fr; }
   .booking-intro { grid-column: auto; }
   .booking-bar .button { width: 100%; }
   .booking-bar input, .booking-bar select { font-size: 1rem; }
