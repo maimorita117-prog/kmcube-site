@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ArrowDown, ArrowRight, BedDouble, CalendarDays, CarFront, Check, Clock,
-  Coffee, ExternalLink, Footprints, Globe2, Heart, Kayak, Leaf, MapPin, Mountain,
+  Coffee, ExternalLink, Footprints, Globe2, Heart, Kayak, MapPin, Mountain,
   MessageCircleHeart, Ship, ShieldCheck, Users, Waves,
 } from 'lucide-react';
 
@@ -54,6 +54,7 @@ const translations = {
     nav: ['旅のサービス', '旅のかたち', '私たちについて', '会社案内'], navBooking: 'レンタカー予約', navBookingShort: '予約',
     driveCaption: 'ゆっくり安全運転中',
     eyebrow: '屋久島の旅を、ひとつにつなぐ', heroLine1: 'めぐる。', heroLine2: 'くつろぐ。', heroLine3: '屋久島を好きになる。',
+    heroPhotoAlt: '青い海に囲まれ、深い森と霧をまとう山々が連なる屋久島を上空から望む風景',
     heroLead: 'レンタカーで島をめぐり、ほっとひと息ついて、心地よく泊まる。KMCUBEが、あなたらしい屋久島時間をそっとお手伝いします。',
     checkCars: 'レンタカーの空きを見る', seeServices: 'サービスを見る',
     trust: '屋久島に根ざす観光サービス。関連会社はキューブ株式会社です。',
@@ -104,6 +105,7 @@ const translations = {
     nav: ['Services', 'Your island day', 'About us', 'Company'], navBooking: 'Book a rental car', navBookingShort: 'Book',
     driveCaption: 'Enjoying a safe, easy drive',
     eyebrow: 'Connecting every part of your Yakushima trip', heroLine1: 'Roam.', heroLine2: 'Unwind.', heroLine3: 'Fall in love with Yakushima.',
+    heroPhotoAlt: 'An aerial view of Yakushima rising from the blue ocean, covered in deep forest and misty mountain ridges',
     heroLead: 'Explore the island by rental car, pause for a relaxing break, and settle into a comfortable stay. KMCUBE is here to help you enjoy Yakushima your own way.',
     checkCars: 'Check rental car availability', seeServices: 'Explore our services',
     trust: 'A locally rooted travel company on Yakushima, affiliated with Cube Inc.',
@@ -340,6 +342,8 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
+        <img className="hero-photo" src="./hero-yakushima-aerial-v3.jpg" alt={t.heroPhotoAlt} width="1536" height="1024" fetchPriority="high" />
+        <div className="hero-photo-shade" aria-hidden="true" />
         <div className="hero-copy">
           <p className="eyebrow"><MapPin aria-hidden="true" /> {t.eyebrow}</p>
           <h1>{t.heroLine1}<br />{t.heroLine2}<br /><em>{t.heroLine3}</em></h1>
@@ -350,23 +354,8 @@ export default function Home() {
           </div>
           <p className="trust-note"><ShieldCheck aria-hidden="true" /> {t.trust}</p>
         </div>
-
-        <div className="hero-visual map-hero">
-          <div className="map-panel">
-            <p className="map-kicker"><MapPin aria-hidden="true" /> KMCUBE ISLAND MAP</p>
-            <img className="map-illustration" src="./yakushima-map-transparent.png" alt={t.mapAlt} />
-            <span className="island-label label-nagata">{t.places[0]}</span>
-            <div className="nagata-wildlife" aria-label={t.wildlifeLabel}>
-              <img className="wildlife-deer" src="./yakushika-deer.png" alt={t.deerAlt} />
-              <img className="wildlife-monkey" src="./yakushima-macaque.png" alt={t.monkeyAlt} />
-            </div>
-            <span className="island-label label-miyanoura">{t.places[1]}</span>
-            <span className="island-label label-anbo">{t.places[2]}</span>
-            <span className="island-label label-onoaida">{t.places[3]}</span>
-          </div>
-          <div className="visual-badge"><Leaf aria-hidden="true" /><span>{t.mapBadge1}<br /><strong>{t.mapBadge2}</strong></span></div>
-          <p className="pencil-note">Drive around Yakushima!</p>
-        </div>
+        <p className="hero-photo-note">Wild island, warm journey.</p>
+        <div className="hero-photo-caption"><span>WORLD NATURAL HERITAGE</span><strong>YAKUSHIMA, JAPAN</strong></div>
       </section>
 
       <section className="trip-planner" id="reserve" aria-labelledby="trip-planner-title">
