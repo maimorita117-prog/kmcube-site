@@ -142,6 +142,20 @@ function body_json(): array
     return $value;
 }
 
+function booking_rates(): array
+{
+    global $config;
+    $serviceDefaults = ['stay' => 6600, 'hike' => 8800, 'activity' => 6600, 'boat' => 8800];
+    $configuredServices = is_array($config['service_prices'] ?? null) ? $config['service_prices'] : [];
+    $services = [];
+    foreach ($serviceDefaults as $id => $price) $services[$id] = max(0, (int)($configuredServices[$id] ?? $price));
+    return [
+        'insurancePerDay' => max(0, (int)($config['insurance_per_day'] ?? 1100)),
+        'childSeatPerDay' => max(0, (int)($config['child_seat_per_day'] ?? 550)),
+        'services' => $services,
+    ];
+}
+
 function clean_text($value, int $max = 500): string
 {
     $text = trim((string)$value);

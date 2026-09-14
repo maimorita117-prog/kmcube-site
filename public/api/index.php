@@ -17,7 +17,7 @@ try {
     }
 
     if ($action === 'catalog') {
-        json_response(['ok' => true, 'cars' => array_map('public_vehicle', vehicle_catalog($pdo))]);
+        json_response(['ok' => true, 'cars' => array_map('public_vehicle', vehicle_catalog($pdo)), 'rates' => booking_rates()]);
     }
 
     if ($action === 'availability') {
@@ -81,8 +81,14 @@ try {
         $extras = array_values(array_intersect($allowedExtras, is_array($body['additionalServices'] ?? null) ? $body['additionalServices'] : []));
         $billingUnits = $billingMode === 'hourly' ? $hours : max(1, (int)ceil($hours / 24));
         $optionUnits = $billingMode === 'hourly' ? 1 : $billingUnits;
+        $rates = booking_rates();
         $basePrice = $billingMode === 'hourly' ? min((int)$car['daily_price'], (int)$car['hourly_price'] * $billingUnits) : (int)$car['daily_price'] * $billingUnits;
-        $total = $basePrice + ($insurance * (int)$config['insurance_per_day'] * $optionUnits) + ($childSeats * (int)$config['child_seat_per_day'] * $optionUnits);
+        $serviceTotal = 0;
+        foreach ($extras as $extra) {
+            $quantity = $people * ($extra === 'stay' ? max(1, (int)ceil($hours / 24)) : 1);
+            $serviceTotal += (int)$rates['services'][$extra] * $quantity;
+        }
+        $total = $basePrice + ($insurance * (int)$rates['insurancePerDay'] * $optionUnits) + ($childSeats * (int)$rates['childSeatPerDay'] * $optionUnits) + $serviceTotal;
         $token = bin2hex(random_bytes(18));
         $now = date('Y-m-d H:i:s');
         $code = 'KMC-' . date('ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));

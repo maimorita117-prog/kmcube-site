@@ -13,4 +13,10 @@ return [
     ],
     'insurance_per_day' => 1100,
     'child_seat_per_day' => 550,
+    'service_prices' => [
+        'stay' => 6600,
+        'hike' => 8800,
+        'activity' => 6600,
+        'boat' => 8800,
+    ],
 ];
