@@ -36,10 +36,11 @@ try {
             $id = (string)$car['id'];
             $booked = active_booking_count($pdo, $id, $startAt, $endAt);
             $blocked = blocked_vehicle_count($pdo, $id, $startAt, $endAt);
-            $cars[] = [
-                'id' => $id, 'label' => $car['label'], 'model' => $car['model'], 'price' => (int)$car['daily_price'], 'hourlyPrice' => (int)$car['hourly_price'],
-                'inventory' => (int)$car['inventory'], 'booked' => $booked, 'blocked' => $blocked, 'available' => max(0, (int)$car['inventory'] - $booked - $blocked),
-            ];
+            $cars[] = array_merge(public_vehicle($car), [
+                'booked' => $booked,
+                'blocked' => $blocked,
+                'available' => max(0, (int)$car['inventory'] - $booked - $blocked),
+            ]);
         }
         json_response(['ok' => true, 'cars' => $cars]);
     }

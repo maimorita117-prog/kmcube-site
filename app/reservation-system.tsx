@@ -134,7 +134,10 @@ export function ReservationSystem({ language }: { language: Language }) {
     setLoading(true);
     try {
       const payload = await callApi<{ cars: Availability[] }>(`availability&start=${encodeURIComponent(startDate)}&end=${encodeURIComponent(endDate)}&startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}&billingMode=${billingMode}`);
-      setCars(payload.cars);
+      setCars((currentCars) => payload.cars.map((car) => ({
+        ...car,
+        imageUrl: car.imageUrl || currentCars.find((currentCar) => currentCar.id === car.id)?.imageUrl,
+      })));
       setApiReady(true);
       setSearched(true);
       if (selectedCar && !payload.cars.find((car) => car.id === selectedCar && car.available > 0)) setSelectedCar('');
