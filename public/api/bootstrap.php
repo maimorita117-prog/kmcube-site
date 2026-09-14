@@ -66,6 +66,7 @@ function db(): PDO
         id TEXT PRIMARY KEY,
         label TEXT NOT NULL,
         model TEXT NOT NULL DEFAULT "",
+        image_path TEXT NOT NULL DEFAULT "",
         daily_price INTEGER NOT NULL,
         hourly_price INTEGER NOT NULL,
         inventory INTEGER NOT NULL DEFAULT 1,
@@ -74,9 +75,17 @@ function db(): PDO
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
     )');
+    $vehicleColumns = array_column($pdo->query('PRAGMA table_info(vehicles)')->fetchAll(), 'name');
+    $vehicleImageColumnAdded = !in_array('image_path', $vehicleColumns, true);
+    if ($vehicleImageColumnAdded) $pdo->exec('ALTER TABLE vehicles ADD COLUMN image_path TEXT NOT NULL DEFAULT ""');
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_vehicles_active_order ON vehicles(active, display_order, created_at)');
+    $defaultVehicleImages = [
+        'kei' => '/vehicle-kei.webp',
+        'compact' => '/vehicle-compact.webp',
+        'van' => '/vehicle-minivan.webp',
+    ];
     if ((int)$pdo->query('SELECT COUNT(*) FROM vehicles')->fetchColumn() === 0) {
-        $seed = $pdo->prepare('INSERT INTO vehicles(id, label, model, daily_price, hourly_price, inventory, active, display_order, created_at, updated_at) VALUES(:id, :label, :model, :daily, :hourly, :inventory, 1, :sort, :created, :updated)');
+        $seed = $pdo->prepare('INSERT INTO vehicles(id, label, model, image_path, daily_price, hourly_price, inventory, active, display_order, created_at, updated_at) VALUES(:id, :label, :model, :image, :daily, :hourly, :inventory, 1, :sort, :created, :updated)');
         $now = date('Y-m-d H:i:s');
         $sort = 10;
         foreach (($config['cars'] ?? []) as $id => $car) {
@@ -84,6 +93,7 @@ function db(): PDO
                 ':id' => (string)$id,
                 ':label' => (string)($car['label'] ?? $id),
                 ':model' => (string)($car['model'] ?? ''),
+                ':image' => $defaultVehicleImages[(string)$id] ?? '',
                 ':daily' => max(0, (int)($car['price'] ?? 0)),
                 ':hourly' => max(0, (int)($car['hourly_price'] ?? 0)),
                 ':inventory' => max(0, (int)($car['inventory'] ?? 0)),
@@ -93,6 +103,10 @@ function db(): PDO
             ]);
             $sort += 10;
         }
+    }
+    if ($vehicleImageColumnAdded) {
+        $setDefaultImage = $pdo->prepare('UPDATE vehicles SET image_path = :image WHERE id = :id AND image_path = ""');
+        foreach ($defaultVehicleImages as $id => $image) $setDefaultImage->execute([':id' => $id, ':image' => $image]);
     }
     $pdo->exec('CREATE TABLE IF NOT EXISTS availability_blocks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -200,6 +214,7 @@ function public_vehicle(array $vehicle): array
 {
     return [
         'id' => $vehicle['id'], 'label' => $vehicle['label'], 'model' => $vehicle['model'],
+        'imageUrl' => $vehicle['image_path'] ?? '',
         'price' => (int)$vehicle['daily_price'], 'hourlyPrice' => (int)$vehicle['hourly_price'],
         'inventory' => (int)$vehicle['inventory'], 'available' => (int)$vehicle['inventory'],
     ];

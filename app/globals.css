@@ -284,14 +284,17 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
 .booking-step-title > span { display: grid; place-items: center; width: 34px; height: 34px; color: #183f35; background: var(--secondary); border-radius: 12px 15px 11px 14px; font-family: Arial, sans-serif; font-size: .72rem; font-weight: 900; transform: rotate(-4deg); }
 .booking-step-title h3 { margin: 0; font-size: 1.22rem; }
 .availability-cars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
-.availability-cars button { position: relative; display: grid; grid-template-columns: auto 1fr; gap: 4px 13px; min-height: 170px; padding: 25px 20px 20px; overflow: hidden; color: var(--foreground); background: #faf7ed; border: 2px solid #d4ddcb; border-radius: 21px 21px 42px 21px; cursor: pointer; text-align: left; transition: transform .2s ease, border-color .2s ease, background .2s ease; }
+.availability-cars button { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 4px 13px; min-height: 330px; padding: 11px 11px 18px; overflow: hidden; color: var(--foreground); background: #faf7ed; border: 2px solid #d4ddcb; border-radius: 21px 21px 42px 21px; cursor: pointer; text-align: left; transition: transform .2s ease, border-color .2s ease, background .2s ease; }
 .availability-cars button:not(:disabled):hover { transform: translateY(-3px); border-color: #7ea274; }
 .availability-cars button.selected { background: #e6eedb; border-color: var(--primary); box-shadow: 0 12px 25px rgba(29,89,73,.12); }
 .availability-cars button:disabled { cursor: not-allowed; opacity: .58; }
-.availability-cars button > svg { grid-row: 1 / 4; width: 42px; height: 42px; margin-top: 18px; padding: 8px; color: var(--primary); background: var(--secondary); border-radius: 14px; }
-.availability-cars small { align-self: end; color: #758981; font-size: .7rem; }
+.car-photo-frame { grid-column: 1 / -1; display: grid; place-items: center; width: 100%; aspect-ratio: 4 / 3; margin-bottom: 10px; overflow: hidden; color: var(--primary); background: #e9f0e4; border-radius: 14px 14px 28px 14px; }
+.car-photo-frame img { width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; }
+.availability-cars button:not(:disabled):hover .car-photo-frame img { transform: scale(1.035); }
+.car-photo-frame > svg { width: 54px; height: 54px; padding: 10px; color: var(--primary); background: var(--secondary); border-radius: 16px; }
+.availability-cars small { grid-column: 1 / -1; align-self: end; color: #758981; font-size: .7rem; }
 .availability-cars strong { font-size: 1.15rem; }
-.availability-cars b { grid-column: 1 / -1; align-self: end; margin-top: 13px; font-family: Arial, sans-serif; font-size: 1.4rem; }
+.availability-cars b { align-self: end; font-family: Arial, sans-serif; font-size: 1.4rem; text-align: right; }
 .availability-cars b em { color: #687f76; font-size: .65rem; font-style: normal; }
 .car-availability { position: absolute; top: 13px; right: 13px; padding: 5px 9px; color: #fff; background: var(--primary); border-radius: 999px; font-size: .67rem; font-weight: 850; }
 .availability-cars button:disabled .car-availability { background: #82918b; }
@@ -460,7 +463,7 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .reservation-tabs button { border-radius: 14px; }
   .reservation-policies, .billing-mode, .availability-search, .availability-cars, .option-grid, .extra-service-grid, .customer-grid, .lookup-form, .change-request { grid-template-columns: 1fr; }
   .availability-search .button, .customer-grid .wide, .change-request .wide, .change-request .button { grid-column: auto; }
-  .availability-cars button { min-height: 156px; }
+  .availability-cars button { min-height: 0; }
   .booking-detail-form { gap: 4px; }
   .reservation-summary { margin-top: 22px; }
   .reservation-success { padding: 35px 18px; }

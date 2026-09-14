@@ -31,6 +31,9 @@ yarn-error.log*
 .env*
 public/api/config.local.php
 public/api/storage/*.sqlite*
+public/api/uploads/vehicles/*
+!public/api/uploads/vehicles/.gitkeep
+!public/api/uploads/vehicles/.htaccess
 
 # deployment and generated files
 .vercel

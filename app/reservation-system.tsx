@@ -5,7 +5,7 @@ import { ArrowRight, CalendarDays, CarFront, Check, CreditCard, Mail, Search, Sh
 
 type Language = 'ja' | 'en';
 type BillingMode = 'hourly' | 'daily';
-type Availability = { id: string; label: string; model: string; price: number; hourlyPrice: number; inventory: number; booked?: number; blocked?: number; available: number };
+type Availability = { id: string; label: string; model: string; imageUrl?: string; price: number; hourlyPrice: number; inventory: number; booked?: number; blocked?: number; available: number };
 type Booking = {
   code: string; status: string; carClass: string; carLabel: string; startDate: string; endDate: string;
   startTime: string; endTime: string; billingMode: BillingMode; pickupLocation: string; people: number; total: number; paymentMethod: string; additionalServices: string[];
@@ -13,9 +13,9 @@ type Booking = {
 
 const API_URL = './api/index.php';
 const carDefaults: Availability[] = [
-  { id: 'kei', label: '軽自動車', model: 'N-BOXクラス', price: 6600, hourlyPrice: 1100, inventory: 2, booked: 0, blocked: 0, available: 2 },
-  { id: 'compact', label: 'コンパクト', model: 'AQUAクラス', price: 7700, hourlyPrice: 1300, inventory: 2, booked: 0, blocked: 0, available: 2 },
-  { id: 'van', label: 'ミニバン', model: '7人乗りクラス', price: 9900, hourlyPrice: 1700, inventory: 1, booked: 0, blocked: 0, available: 1 },
+  { id: 'kei', label: '軽自動車', model: 'N-BOXクラス', imageUrl: '/vehicle-kei.webp', price: 6600, hourlyPrice: 1100, inventory: 2, booked: 0, blocked: 0, available: 2 },
+  { id: 'compact', label: 'コンパクト', model: 'AQUAクラス', imageUrl: '/vehicle-compact.webp', price: 7700, hourlyPrice: 1300, inventory: 2, booked: 0, blocked: 0, available: 2 },
+  { id: 'van', label: 'ミニバン', model: '7人乗りクラス', imageUrl: '/vehicle-minivan.webp', price: 9900, hourlyPrice: 1700, inventory: 1, booked: 0, blocked: 0, available: 1 },
 ];
 
 const copy = {
@@ -240,7 +240,7 @@ export function ReservationSystem({ language }: { language: Language }) {
               const canSelect = searched && apiReady && car.available > 0;
               return <button key={car.id} type="button" className={selectedCar === car.id ? 'selected' : ''} disabled={!canSelect} onClick={() => setSelectedCar(car.id)}>
                 <span className="car-availability">{searched ? (car.available > 0 ? `${t.available} ${car.available}` : t.unavailable) : t.search}</span>
-                <CarFront aria-hidden="true" /><small>{car.model}</small><strong>{car.label}</strong><b>{yen(billingMode === 'hourly' ? car.hourlyPrice : car.price)}<em> / {billingMode === 'hourly' ? t.hours : t.perDay}</em></b>
+                <span className="car-photo-frame">{car.imageUrl ? <img src={car.imageUrl} alt={language === 'ja' ? `${car.label}（${car.model}）の代表車両` : `Representative ${car.label} vehicle (${car.model})`} loading="lazy" /> : <CarFront aria-hidden="true" />}</span><small>{car.model}</small><strong>{car.label}</strong><b>{yen(billingMode === 'hourly' ? car.hourlyPrice : car.price)}<em> / {billingMode === 'hourly' ? t.hours : t.perDay}</em></b>
               </button>;
             })}</div>
           </div>
