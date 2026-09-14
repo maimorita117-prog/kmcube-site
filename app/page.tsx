@@ -6,6 +6,7 @@ import {
   Coffee, ExternalLink, Footprints, Globe2, Heart, Kayak, MapPin, Mountain,
   MessageCircleHeart, Ship, ShieldCheck, Users, Waves,
 } from 'lucide-react';
+import { ReservationSystem } from './reservation-system';
 
 type Language = 'ja' | 'en';
 type TripServiceId = 'car' | 'stay' | 'hike' | 'activity' | 'boat';
@@ -25,11 +26,8 @@ declare global {
   interface Document { modelContext?: WebMcpContext }
 }
 
-const rentalBookingUrl = 'https://hp-cube.sakura.ne.jp/rentalcar/';
 const rentalBookingLinkProps = {
-  href: rentalBookingUrl,
-  target: '_blank',
-  rel: 'noopener noreferrer',
+  href: '#booking',
 } as const;
 
 const serviceMeta = [
@@ -312,8 +310,8 @@ export default function Home() {
       },
       annotations: { readOnlyHint: false, untrustedContentHint: false },
       execute() {
-        window.location.assign(rentalBookingUrl);
-        return { status: 'redirecting', url: rentalBookingUrl };
+        window.location.hash = 'booking';
+        return { status: 'opened', location: '#booking' };
       },
     }, { signal: lifecycle.signal });
     void Promise.resolve(registration).catch(() => undefined);
@@ -415,6 +413,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <ReservationSystem language={language} />
 
       <section className="section services" id="services">
         <div className="section-heading">

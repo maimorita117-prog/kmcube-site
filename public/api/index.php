@@ -1,0 +1,145 @@
+<?php
+declare(strict_types=1);
+
+require __DIR__ . '/bootstrap.php';
+
+header('Referrer-Policy: same-origin');
+header('X-Frame-Options: SAMEORIGIN');
+
+try {
+    $pdo = db();
+    $action = clean_text($_GET['action'] ?? 'health', 30);
+
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') json_response(['ok' => true]);
+
+    if ($action === 'health') {
+        json_response(['ok' => true, 'service' => 'KMCUBE Booking API', 'time' => date(DATE_ATOM)]);
+    }
+
+    if ($action === 'availability') {
+        $start = clean_text($_GET['start'] ?? '', 10);
+        $end = clean_text($_GET['end'] ?? '', 10);
+        if (!valid_date($start) || !valid_date($end) || $end < $start) json_response(['ok' => false, 'message' => '利用日をご確認ください。'], 422);
+        $cars = [];
+        foreach ($config['cars'] as $id => $car) {
+            $booked = active_booking_count($pdo, $id, $start, $end);
+            $cars[] = [
+                'id' => $id, 'label' => $car['label'], 'model' => $car['model'], 'price' => (int)$car['price'],
+                'inventory' => (int)$car['inventory'], 'booked' => $booked, 'available' => max(0, (int)$car['inventory'] - $booked),
+            ];
+        }
+        json_response(['ok' => true, 'cars' => $cars]);
+    }
+
+    if ($action === 'reservation') {
+        $booking = require_booking($pdo, clean_text($_GET['code'] ?? '', 32), clean_text($_GET['token'] ?? '', 128));
+        json_response(['ok' => true, 'booking' => public_booking($booking, $config)]);
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_response(['ok' => false, 'message' => 'この操作は利用できません。'], 405);
+    $body = body_json();
+
+    if ($action === 'reserve') {
+        client_rate_limit($pdo);
+        if (!empty($body['website'])) json_response(['ok' => true]);
+        $start = clean_text($body['startDate'] ?? '', 10);
+        $end = clean_text($body['endDate'] ?? '', 10);
+        $carClass = clean_text($body['carClass'] ?? '', 20);
+        $name = clean_text($body['name'] ?? '', 80);
+        $email = clean_text($body['email'] ?? '', 180);
+        $phone = clean_text($body['phone'] ?? '', 40);
+        if (!valid_date($start) || !valid_date($end) || $end < $start || $start < date('Y-m-d')) json_response(['ok' => false, 'message' => '利用日をご確認ください。'], 422);
+        if (!isset($config['cars'][$carClass])) json_response(['ok' => false, 'message' => '車両クラスをご確認ください。'], 422);
+        if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $phone === '') json_response(['ok' => false, 'message' => 'お名前、メールアドレス、電話番号をご確認ください。'], 422);
+
+        $people = max(1, min(8, (int)($body['people'] ?? 1)));
+        $insurance = !empty($body['insurance']) ? 1 : 0;
+        $childSeats = max(0, min(3, (int)($body['childSeats'] ?? 0)));
+        $allowedExtras = ['stay', 'hike', 'activity', 'boat'];
+        $extras = array_values(array_intersect($allowedExtras, is_array($body['additionalServices'] ?? null) ? $body['additionalServices'] : []));
+        $days = booking_days($start, $end);
+        $car = $config['cars'][$carClass];
+        $basePrice = (int)$car['price'] * $days;
+        $total = $basePrice + ($insurance * (int)$config['insurance_per_day'] * $days) + ($childSeats * (int)$config['child_seat_per_day'] * $days);
+        $token = bin2hex(random_bytes(18));
+        $now = date('Y-m-d H:i:s');
+        $code = 'KMC-' . date('ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
+
+        try {
+            $pdo->exec('BEGIN IMMEDIATE');
+            $booked = active_booking_count($pdo, $carClass, $start, $end);
+            if ($booked >= (int)$car['inventory']) {
+                $pdo->rollBack();
+                json_response(['ok' => false, 'message' => '申し訳ありません。選択中に満車となりました。別の車両をお選びください。'], 409);
+            }
+            $stmt = $pdo->prepare('INSERT INTO bookings (
+                code, access_token_hash, status, car_class, start_date, end_date, pickup_location, people, insurance,
+                child_seats, additional_services, payment_method, name, email, phone, arrival, notes, language,
+                base_price, total, created_at, updated_at
+            ) VALUES (
+                :code, :token, "pending", :car, :start, :end, :pickup, :people, :insurance,
+                :seats, :extras, "onsite", :name, :email, :phone, :arrival, :notes, :language,
+                :base_price, :total, :created, :updated
+            )');
+            $stmt->execute([
+                ':code' => $code, ':token' => hash('sha256', $token), ':car' => $carClass, ':start' => $start, ':end' => $end,
+                ':pickup' => clean_text($body['pickupLocation'] ?? '', 80), ':people' => $people, ':insurance' => $insurance,
+                ':seats' => $childSeats, ':extras' => json_encode($extras, JSON_UNESCAPED_UNICODE), ':name' => $name, ':email' => $email,
+                ':phone' => $phone, ':arrival' => clean_text($body['arrival'] ?? '', 120), ':notes' => clean_text($body['notes'] ?? '', 1000),
+                ':language' => ($body['language'] ?? 'ja') === 'en' ? 'en' : 'ja', ':base_price' => $basePrice, ':total' => $total,
+                ':created' => $now, ':updated' => $now,
+            ]);
+            $id = (int)$pdo->lastInsertId();
+            $pdo->commit();
+        } catch (Throwable $error) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+        $stmt = $pdo->prepare('SELECT * FROM bookings WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+        $booking = $stmt->fetch();
+        $mailSent = send_booking_mail($booking, $token, $config, 'created');
+        json_response(['ok' => true, 'booking' => public_booking($booking, $config), 'accessToken' => $token, 'mailSent' => $mailSent], 201);
+    }
+
+    if ($action === 'cancel') {
+        client_rate_limit($pdo);
+        $token = clean_text($body['token'] ?? '', 128);
+        $booking = require_booking($pdo, clean_text($body['code'] ?? '', 32), $token);
+        if ($booking['status'] !== 'cancelled') {
+            $stmt = $pdo->prepare('UPDATE bookings SET status = "cancelled", cancelled_at = :now, updated_at = :now WHERE id = :id');
+            $stmt->execute([':now' => date('Y-m-d H:i:s'), ':id' => $booking['id']]);
+            $stmt = $pdo->prepare('SELECT * FROM bookings WHERE id = :id');
+            $stmt->execute([':id' => $booking['id']]);
+            $booking = $stmt->fetch();
+            send_booking_mail($booking, '', $config, 'cancelled');
+        }
+        json_response(['ok' => true, 'booking' => public_booking($booking, $config)]);
+    }
+
+    if ($action === 'change') {
+        client_rate_limit($pdo);
+        $token = clean_text($body['token'] ?? '', 128);
+        $booking = require_booking($pdo, clean_text($body['code'] ?? '', 32), $token);
+        if ($booking['status'] === 'cancelled') json_response(['ok' => false, 'message' => 'キャンセル済みの予約は変更できません。'], 409);
+        $requestedStart = clean_text($body['requestedStart'] ?? '', 10);
+        $requestedEnd = clean_text($body['requestedEnd'] ?? '', 10);
+        $requestedCar = clean_text($body['requestedCar'] ?? '', 20);
+        if (!valid_date($requestedStart) || !valid_date($requestedEnd) || $requestedEnd < $requestedStart || !isset($config['cars'][$requestedCar])) {
+            json_response(['ok' => false, 'message' => '変更希望の日時・車両をご確認ください。'], 422);
+        }
+        $request = ['startDate' => $requestedStart, 'endDate' => $requestedEnd, 'carClass' => $requestedCar, 'message' => clean_text($body['message'] ?? '', 600), 'requestedAt' => date(DATE_ATOM)];
+        $stmt = $pdo->prepare('UPDATE bookings SET status = "change_requested", change_request = :request, updated_at = :now WHERE id = :id');
+        $stmt->execute([':request' => json_encode($request, JSON_UNESCAPED_UNICODE), ':now' => date('Y-m-d H:i:s'), ':id' => $booking['id']]);
+        $stmt = $pdo->prepare('SELECT * FROM bookings WHERE id = :id');
+        $stmt->execute([':id' => $booking['id']]);
+        $booking = $stmt->fetch();
+        send_booking_mail($booking, '', $config, 'change');
+        json_response(['ok' => true, 'booking' => public_booking($booking, $config)]);
+    }
+
+    json_response(['ok' => false, 'message' => '操作が見つかりません。'], 404);
+} catch (Throwable $error) {
+    error_log('[KMCUBE booking] ' . $error->getMessage());
+    json_response(['ok' => false, 'message' => '予約システムでエラーが発生しました。時間をおいてお試しください。'], 500);
+}
