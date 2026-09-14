@@ -2,14 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowDown, ArrowRight, BedDouble, CalendarDays, CarFront, Check, Clock,
-  Coffee, ExternalLink, Footprints, Globe2, Heart, Kayak, MapPin, Mountain,
-  MessageCircleHeart, Ship, ShieldCheck, Users, Waves,
+  ArrowDown, ArrowRight, BedDouble, CarFront, Check,
+  Coffee, ExternalLink, Footprints, Globe2, Heart, Kayak, MapPin,
+  MessageCircleHeart, ShieldCheck, Waves,
 } from 'lucide-react';
 import { ReservationSystem } from './reservation-system';
 
 type Language = 'ja' | 'en';
-type TripServiceId = 'car' | 'stay' | 'hike' | 'activity' | 'boat';
 
 type WebMcpContext = {
   registerTool: (tool: {
@@ -36,14 +35,6 @@ const serviceMeta = [
   { number: '03', icon: BedDouble, kicker: 'ISLAND STAY', tone: 'green' },
 ];
 
-const tripServiceMeta = [
-  { id: 'car', icon: CarFront, price: 4800, quantity: 'days' },
-  { id: 'stay', icon: BedDouble, price: 5500, quantity: 'nightsPeople' },
-  { id: 'hike', icon: Mountain, price: 6800, quantity: 'people' },
-  { id: 'activity', icon: Kayak, price: 4800, quantity: 'people' },
-  { id: 'boat', icon: Ship, price: 6000, quantity: 'people' },
-] as const satisfies ReadonlyArray<{ id: TripServiceId; icon: typeof CarFront; price: number; quantity: 'days' | 'nightsPeople' | 'people' }>;
-
 const translations = {
   ja: {
     metaTitle: 'KMCUBE｜屋久島の旅をひとつに',
@@ -58,17 +49,6 @@ const translations = {
     trust: '屋久島に根ざす観光サービス。関連会社はキューブ株式会社です。',
     mapAlt: '森、山、滝、川、温泉、港を描いた手描きの屋久島マップ', deerAlt: '手描きのヤクシカ', monkeyAlt: '手描きのヤクシマザル', wildlifeLabel: '永田周辺のヤクシカとヤクシマザル',
     places: ['永田', '宮之浦', '安房', '尾之間'], mapBadge1: '車でぐるり、島めぐり', mapBadge2: '旅の楽しさをまるごと',
-    plannerKicker: 'BUILD YOUR ISLAND TRIP', plannerTitle: '旅の日程と、やりたいことを選ぶ。', plannerIntro: 'レンタカーと滞在、自然体験をひとつの旅として組み合わせられます。複数選択するとセット割引の概算も確認できます。',
-    startDate: '旅行開始日', endDate: '旅行終了日', startTime: '開始希望時刻', travelers: 'ご利用人数', travelersUnit: '名', chooseServices: 'サービスを選ぶ', multiSelect: '複数選択できます', recommended: 'おすすめ',
-    plannerServices: [
-      { title: 'レンタカー', kicker: 'RENT A CAR', copy: '島内移動を自由に。旅の日数に合わせた一台をご案内します。', unit: '/ 台・日' },
-      { title: '民泊', kicker: 'ISLAND STAY', copy: '遊んだあとは島で暮らすように、ゆっくりとくつろぐ滞在を。', unit: '/ 人・泊' },
-      { title: '登山案内', kicker: 'HIKING GUIDE', copy: '体力や天候に合わせ、屋久島の森を安心して歩くプランです。', unit: '/ 人・回' },
-      { title: 'アクティビティ', kicker: 'ACTIVITY', copy: 'カヤックなど、海や川の自然を楽しむ体験をご案内します。', unit: '/ 人・回' },
-      { title: '漁船遊覧', kicker: 'FISHING BOAT CRUISE', copy: '漁船から島の海岸線を眺める、屋久島ならではの遊覧体験です。', unit: '/ 人・回' },
-    ],
-    estimateTitle: '旅の概算', estimateEmpty: 'サービスを選択すると概算を表示します。', basicSubtotal: '基本料金小計', packageDiscount: 'セット割引', estimatedTotal: '概算合計', dayCount: '日', nightCount: '泊', peopleCount: '名',
-    discountGuide: '2サービスで5%OFF・3〜4サービスで10%OFF・5サービスで15%OFF', priceNotice: '表示料金は企画段階の暫定基本料金です。季節、保険、装備、送迎範囲などの正式料金・利用ルールは決定後に更新します。', plannerCta: 'レンタカー予約・旅の相談へ', plannerCtaNote: '現在は専用サイトでレンタカー予約を受付。その他のサービスは準備が整い次第、順次ご案内します。',
     servicesTitle1: '島の旅を、', servicesTitle2: 'やさしくつなぐ。', servicesIntro: '移動、休憩、宿泊を別々に探す手間を少なく。KMCUBEなら、屋久島で過ごす時間をひと続きに相談できます。',
     services: [
       { title: 'レンタカー', copy: '到着したら、すぐに島時間へ。旅程に合わせて使いやすい一台をご案内します。', note: 'オンラインで空車確認・予約', status: '予約受付中' },
@@ -109,17 +89,6 @@ const translations = {
     trust: 'A locally rooted travel company on Yakushima, affiliated with Cube Inc.',
     mapAlt: 'Hand-painted map of Yakushima featuring forests, mountains, waterfalls, rivers, hot springs, and ports', deerAlt: 'Hand-painted Yakushika deer', monkeyAlt: 'Hand-painted Yakushima macaque', wildlifeLabel: 'Yakushika deer and Yakushima macaque near Nagata',
     places: ['Nagata', 'Miyanoura', 'Anbo', 'Onoaida'], mapBadge1: 'Drive around the island', mapBadge2: 'Enjoy the whole journey',
-    plannerKicker: 'BUILD YOUR ISLAND TRIP', plannerTitle: 'Choose your dates and island experiences.', plannerIntro: 'Combine a rental car, stay, and nature experiences into one Yakushima trip. Select more than one service to see an estimated package discount.',
-    startDate: 'Trip start date', endDate: 'Trip end date', startTime: 'Preferred start time', travelers: 'Travelers', travelersUnit: 'people', chooseServices: 'Choose services', multiSelect: 'Select as many as you like', recommended: 'Recommended',
-    plannerServices: [
-      { title: 'Rental car', kicker: 'RENT A CAR', copy: 'Explore the island freely with a practical car matched to your itinerary.', unit: '/ car · day' },
-      { title: 'Guesthouse stay', kicker: 'ISLAND STAY', copy: 'Unwind after your adventures in a stay that feels close to island life.', unit: '/ person · night' },
-      { title: 'Hiking guide', kicker: 'HIKING GUIDE', copy: 'Walk Yakushima’s forests with a plan suited to your pace and the weather.', unit: '/ person · tour' },
-      { title: 'Activity', kicker: 'ACTIVITY', copy: 'Enjoy the island’s rivers and sea through experiences such as kayaking.', unit: '/ person · tour' },
-      { title: 'Fishing boat cruise', kicker: 'FISHING BOAT CRUISE', copy: 'See Yakushima’s coastline from a local fishing boat on a relaxed cruise.', unit: '/ person · tour' },
-    ],
-    estimateTitle: 'Trip estimate', estimateEmpty: 'Select a service to see an estimate.', basicSubtotal: 'Base subtotal', packageDiscount: 'Package discount', estimatedTotal: 'Estimated total', dayCount: ' days', nightCount: ' nights', peopleCount: ' people',
-    discountGuide: '5% off 2 services · 10% off 3–4 services · 15% off all 5', priceNotice: 'These are provisional planning prices. Final seasonal rates, insurance, equipment, transfer areas, and service rules will be published after confirmation.', plannerCta: 'Rental booking & trip inquiry', plannerCtaNote: 'Rental car bookings are currently available on our dedicated site. Other services will open as preparations are completed.',
     servicesTitle1: 'One gentle connection', servicesTitle2: 'for your island journey.', servicesIntro: 'Spend less time arranging transport, breaks, and accommodation separately. KMCUBE helps connect your time on Yakushima through one friendly point of contact.',
     services: [
       { title: 'Rental cars', copy: 'Start enjoying island time as soon as you arrive. We will help you find a practical car that fits your itinerary.', note: 'Check availability and book online', status: 'BOOKING OPEN' },
@@ -239,36 +208,7 @@ function ScrollDriveCar({ caption }: { caption: string }) {
 
 export default function Home() {
   const [language, setLanguage] = useState<Language>('ja');
-  const [trip, setTrip] = useState({ start: '', end: '', time: '10:00', people: 2 });
-  const [selectedTripServices, setSelectedTripServices] = useState<TripServiceId[]>(['car', 'stay']);
   const t = translations[language];
-
-  const startTimestamp = trip.start ? new Date(`${trip.start}T00:00:00`).getTime() : Number.NaN;
-  const endTimestamp = trip.end ? new Date(`${trip.end}T00:00:00`).getTime() : Number.NaN;
-  const validDateRange = Number.isFinite(startTimestamp) && Number.isFinite(endTimestamp) && endTimestamp >= startTimestamp;
-  const dateDifference = validDateRange ? Math.round((endTimestamp - startTimestamp) / 86400000) : 0;
-  const travelDays = validDateRange ? dateDifference + 1 : 1;
-  const stayNights = validDateRange ? Math.max(1, dateDifference) : 1;
-  const people = Math.max(1, Math.min(8, trip.people || 1));
-  const formatter = new Intl.NumberFormat(language === 'ja' ? 'ja-JP' : 'en-US', { style: 'currency', currency: 'JPY', maximumFractionDigits: 0 });
-  const selectedEstimates = tripServiceMeta.flatMap((service, index) => {
-    if (!selectedTripServices.includes(service.id)) return [];
-    const multiplier = service.quantity === 'days' ? travelDays : service.quantity === 'nightsPeople' ? stayNights * people : people;
-    const quantityLabel = service.quantity === 'days'
-      ? `${travelDays}${t.dayCount}`
-      : service.quantity === 'nightsPeople'
-        ? `${stayNights}${t.nightCount} × ${people}${t.peopleCount}`
-        : `${people}${t.peopleCount}`;
-    return [{ ...service, localized: t.plannerServices[index], multiplier, quantityLabel, total: service.price * multiplier }];
-  });
-  const basicSubtotal = selectedEstimates.reduce((total, service) => total + service.total, 0);
-  const discountRate = selectedEstimates.length >= 5 ? .15 : selectedEstimates.length >= 3 ? .1 : selectedEstimates.length >= 2 ? .05 : 0;
-  const discountAmount = Math.round(basicSubtotal * discountRate);
-  const estimatedTotal = basicSubtotal - discountAmount;
-
-  function toggleTripService(serviceId: TripServiceId) {
-    setSelectedTripServices((current) => current.includes(serviceId) ? current.filter((id) => id !== serviceId) : [...current, serviceId]);
-  }
 
   useEffect(() => {
     let preferred: Language = 'ja';
@@ -354,64 +294,6 @@ export default function Home() {
         </div>
         <p className="hero-photo-note">Wild island, warm journey.</p>
         <div className="hero-photo-caption"><span>WORLD NATURAL HERITAGE</span><strong>YAKUSHIMA, JAPAN</strong></div>
-      </section>
-
-      <section className="trip-planner" id="reserve" aria-labelledby="trip-planner-title">
-        <div className="trip-planner-heading">
-          <div>
-            <p className="section-kicker">{t.plannerKicker}</p>
-            <h2 id="trip-planner-title">{t.plannerTitle}</h2>
-          </div>
-          <p>{t.plannerIntro}</p>
-        </div>
-
-        <div className="trip-date-grid">
-          <label><span><CalendarDays aria-hidden="true" />{t.startDate}</span><input type="date" value={trip.start} onChange={(event) => setTrip((current) => ({ ...current, start: event.target.value, end: current.end && current.end < event.target.value ? event.target.value : current.end }))} /></label>
-          <label><span><CalendarDays aria-hidden="true" />{t.endDate}</span><input type="date" min={trip.start || undefined} value={trip.end} onChange={(event) => setTrip((current) => ({ ...current, end: event.target.value }))} /></label>
-          <label><span><Clock aria-hidden="true" />{t.startTime}</span><input type="time" value={trip.time} onChange={(event) => setTrip((current) => ({ ...current, time: event.target.value }))} /></label>
-          <label><span><Users aria-hidden="true" />{t.travelers}</span><span className="number-field"><input type="number" min="1" max="8" value={people} onChange={(event) => setTrip((current) => ({ ...current, people: Number(event.target.value) }))} /><small>{t.travelersUnit}</small></span></label>
-        </div>
-
-        <div className="trip-service-heading"><h3>{t.chooseServices}</h3><span>{t.multiSelect}</span></div>
-        <div className="trip-service-grid">
-          {tripServiceMeta.map((service, index) => {
-            const Icon = service.icon;
-            const localized = t.plannerServices[index];
-            const selected = selectedTripServices.includes(service.id);
-            return (
-              <label className={`trip-service-option ${selected ? 'selected' : ''}`} key={service.id}>
-                <input className="trip-option-input" type="checkbox" checked={selected} onChange={() => toggleTripService(service.id)} />
-                <span className="trip-option-check"><Check aria-hidden="true" /></span>
-                {service.id === 'car' && <span className="trip-recommended">{t.recommended}</span>}
-                <span className="trip-option-icon"><Icon aria-hidden="true" /></span>
-                <small>{localized.kicker}</small>
-                <strong>{localized.title}</strong>
-                <p>{localized.copy}</p>
-                <b>{formatter.format(service.price)}<em>{localized.unit}</em></b>
-              </label>
-            );
-          })}
-        </div>
-
-        <div className="trip-estimate" aria-live="polite">
-          <div className="trip-estimate-details">
-            <div className="trip-estimate-title"><p className="section-kicker">TRIP ESTIMATE</p><h3>{t.estimateTitle}</h3></div>
-            {selectedEstimates.length ? (
-              <ul>{selectedEstimates.map((service) => <li key={service.id}><span><b>{service.localized.title}</b><small>{service.quantityLabel}</small></span><strong>{formatter.format(service.total)}</strong></li>)}</ul>
-            ) : <p className="trip-empty">{t.estimateEmpty}</p>}
-          </div>
-          <div className="trip-estimate-total">
-            <dl>
-              <div><dt>{t.basicSubtotal}</dt><dd>{formatter.format(basicSubtotal)}</dd></div>
-              <div className="discount"><dt>{t.packageDiscount}<small>{discountRate ? `${Math.round(discountRate * 100)}% OFF` : t.discountGuide}</small></dt><dd>− {formatter.format(discountAmount)}</dd></div>
-              <div className="total"><dt>{t.estimatedTotal}</dt><dd>{formatter.format(estimatedTotal)}</dd></div>
-            </dl>
-            <p className="trip-discount-guide"><strong>SET DISCOUNT</strong>{t.discountGuide}</p>
-            <p className="trip-price-notice">{t.priceNotice}</p>
-            <a className="button button-accent" {...rentalBookingLinkProps}>{t.plannerCta} <ArrowRight aria-hidden="true" /></a>
-            <small className="trip-cta-note">{t.plannerCtaNote}</small>
-          </div>
-        </div>
       </section>
 
       <ReservationSystem language={language} />
