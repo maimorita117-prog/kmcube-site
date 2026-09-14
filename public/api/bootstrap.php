@@ -26,6 +26,11 @@ function db(): PDO
         car_class TEXT NOT NULL,
         start_date TEXT NOT NULL,
         end_date TEXT NOT NULL,
+        start_time TEXT NOT NULL DEFAULT "09:00",
+        end_time TEXT NOT NULL DEFAULT "17:00",
+        billing_mode TEXT NOT NULL DEFAULT "daily",
+        start_at TEXT,
+        end_at TEXT,
         pickup_location TEXT NOT NULL,
         people INTEGER NOT NULL,
         insurance INTEGER NOT NULL DEFAULT 0,
@@ -45,7 +50,27 @@ function db(): PDO
         updated_at TEXT NOT NULL,
         cancelled_at TEXT
     )');
+    $columns = array_column($pdo->query('PRAGMA table_info(bookings)')->fetchAll(), 'name');
+    $migrations = [
+        'start_time' => 'ALTER TABLE bookings ADD COLUMN start_time TEXT NOT NULL DEFAULT "09:00"',
+        'end_time' => 'ALTER TABLE bookings ADD COLUMN end_time TEXT NOT NULL DEFAULT "17:00"',
+        'billing_mode' => 'ALTER TABLE bookings ADD COLUMN billing_mode TEXT NOT NULL DEFAULT "daily"',
+        'start_at' => 'ALTER TABLE bookings ADD COLUMN start_at TEXT',
+        'end_at' => 'ALTER TABLE bookings ADD COLUMN end_at TEXT',
+    ];
+    foreach ($migrations as $column => $sql) if (!in_array($column, $columns, true)) $pdo->exec($sql);
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_booking_dates ON bookings(car_class, start_date, end_date, status)');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_booking_times ON bookings(car_class, start_at, end_at, status)');
+    $pdo->exec('CREATE TABLE IF NOT EXISTS availability_blocks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        car_class TEXT NOT NULL,
+        start_at TEXT NOT NULL,
+        end_at TEXT NOT NULL,
+        quantity INTEGER NOT NULL DEFAULT 1,
+        reason TEXT NOT NULL DEFAULT "",
+        created_at TEXT NOT NULL
+    )');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_availability_blocks ON availability_blocks(car_class, start_at, end_at)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS request_log (ip_hash TEXT NOT NULL, created_at INTEGER NOT NULL)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_request_log_time ON request_log(created_at)');
     return $pdo;
@@ -89,14 +114,32 @@ function booking_days(string $start, string $end): int
     return max(1, (int)$from->diff($to)->days);
 }
 
-function active_booking_count(PDO $pdo, string $carClass, string $start, string $end, ?int $excludeId = null): int
+function booking_hours(string $startAt, string $endAt): int
 {
-    $sql = 'SELECT COUNT(*) FROM bookings WHERE car_class = :car AND status != "cancelled" AND NOT (end_date < :start OR start_date > :end)';
+    $seconds = (new DateTimeImmutable($endAt))->getTimestamp() - (new DateTimeImmutable($startAt))->getTimestamp();
+    return max(1, (int)ceil($seconds / 3600));
+}
+
+function valid_time(string $value): bool
+{
+    return (bool)preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $value);
+}
+
+function active_booking_count(PDO $pdo, string $carClass, string $startAt, string $endAt, ?int $excludeId = null): int
+{
+    $sql = 'SELECT COUNT(*) FROM bookings WHERE car_class = :car AND status != "cancelled" AND NOT (COALESCE(end_at, end_date || " 23:59") <= :start OR COALESCE(start_at, start_date || " 00:00") >= :end)';
     if ($excludeId !== null) $sql .= ' AND id != :exclude_id';
     $stmt = $pdo->prepare($sql);
-    $params = [':car' => $carClass, ':start' => $start, ':end' => $end];
+    $params = [':car' => $carClass, ':start' => $startAt, ':end' => $endAt];
     if ($excludeId !== null) $params[':exclude_id'] = $excludeId;
     $stmt->execute($params);
+    return (int)$stmt->fetchColumn();
+}
+
+function blocked_vehicle_count(PDO $pdo, string $carClass, string $startAt, string $endAt): int
+{
+    $stmt = $pdo->prepare('SELECT COALESCE(SUM(quantity), 0) FROM availability_blocks WHERE car_class = :car AND NOT (end_at <= :start OR start_at >= :end)');
+    $stmt->execute([':car' => $carClass, ':start' => $startAt, ':end' => $endAt]);
     return (int)$stmt->fetchColumn();
 }
 
@@ -105,7 +148,8 @@ function public_booking(array $row, array $config): array
     $car = $config['cars'][$row['car_class']] ?? ['label' => $row['car_class']];
     return [
         'code' => $row['code'], 'status' => $row['status'], 'carClass' => $row['car_class'], 'carLabel' => $car['label'],
-        'startDate' => $row['start_date'], 'endDate' => $row['end_date'], 'pickupLocation' => $row['pickup_location'],
+        'startDate' => $row['start_date'], 'endDate' => $row['end_date'], 'startTime' => $row['start_time'] ?? '09:00',
+        'endTime' => $row['end_time'] ?? '17:00', 'billingMode' => $row['billing_mode'] ?? 'daily', 'pickupLocation' => $row['pickup_location'],
         'people' => (int)$row['people'], 'total' => (int)$row['total'], 'paymentMethod' => $row['payment_method'],
         'additionalServices' => json_decode($row['additional_services'] ?: '[]', true) ?: [],
     ];
@@ -141,7 +185,7 @@ function send_booking_mail(array $booking, string $accessToken, array $config, s
     $subject = '【KMCUBE】' . ($labels[$kind] ?? '予約のお知らせ') . ' ' . $booking['code'];
     $manageUrl = rtrim($config['base_url'], '/') . '/?manage=' . rawurlencode($booking['code']) . '#booking';
     $message = $config['shop_name'] . "\n\n" . ($labels[$kind] ?? '') . "\n予約番号: {$booking['code']}\n";
-    $message .= "利用日: {$booking['start_date']} ～ {$booking['end_date']}\n車両: {$booking['car_class']}\n概算金額: ¥" . number_format((int)$booking['total']) . "\n";
+    $message .= "利用日時: {$booking['start_date']} {$booking['start_time']} ～ {$booking['end_date']} {$booking['end_time']}\n料金体系: {$booking['billing_mode']}\n車両: {$booking['car_class']}\n概算金額: ¥" . number_format((int)$booking['total']) . "\n";
     if ($accessToken !== '') $message .= "管理キー: {$accessToken}\n予約照会: {$manageUrl}\n";
     $message .= "\nこのメールは予約の受付をお知らせするものです。担当者からの予約確定連絡をお待ちください。";
     $headers = ['From: ' . $config['mail_from'], 'Content-Type: text/plain; charset=UTF-8'];

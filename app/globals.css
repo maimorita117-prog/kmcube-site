@@ -328,7 +328,15 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
 .reservation-policies summary { color: var(--foreground); cursor: pointer; font-size: .8rem; font-weight: 850; }
 .reservation-policies p { margin: 11px 0 2px; font-size: .75rem; line-height: 1.75; }
 .reservation-workspace, .manage-booking { padding-top: 10px; }
-.availability-search { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 12px; align-items: end; padding: 20px; background: #edf2e8; border-radius: 24px; }
+.billing-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 620px; margin: 8px 0 14px; }
+.billing-mode label { position: relative; display: flex; align-items: center; min-height: 66px; padding: 12px 16px; color: #5a726a; background: #faf8ef; border: 2px solid #d5dfce; border-radius: 17px; cursor: pointer; }
+.billing-mode label.selected { color: var(--foreground); background: #e7efdc; border-color: var(--primary); }
+.billing-mode input { position: absolute; opacity: 0; }
+.billing-mode span { display: grid; gap: 3px; }
+.billing-mode strong { font-size: .94rem; }
+.billing-mode small { font-size: .7rem; line-height: 1.45; }
+.availability-search { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items: end; padding: 20px; background: #edf2e8; border-radius: 24px; }
+.availability-search label:nth-of-type(5) { grid-column: span 2; }
 .availability-search label, .customer-grid label, .lookup-form label, .change-request label { display: grid; gap: 8px; min-width: 0; color: #557068; font-size: .82rem; font-weight: 800; }
 .availability-search label span { display: flex; align-items: center; gap: 6px; }
 .availability-search label svg { width: 17px; color: var(--accent); }
@@ -453,6 +461,7 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .company-trust { grid-column: auto; }
   .reservation-heading { grid-template-columns: 1fr; gap: 18px; }
   .availability-search { grid-template-columns: 1fr 1fr; }
+  .availability-search label:nth-of-type(5) { grid-column: auto; }
   .availability-search .button { grid-column: 1 / -1; }
   .booking-detail-form { grid-template-columns: 1fr; }
   .reservation-summary { position: static; }
@@ -530,7 +539,7 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .reservation-heading h2 { font-size: 2.2rem; }
   .reservation-tabs { display: grid; border-radius: 19px; }
   .reservation-tabs button { border-radius: 14px; }
-  .reservation-policies, .availability-search, .availability-cars, .option-grid, .extra-service-grid, .customer-grid, .lookup-form, .change-request { grid-template-columns: 1fr; }
+  .reservation-policies, .billing-mode, .availability-search, .availability-cars, .option-grid, .extra-service-grid, .customer-grid, .lookup-form, .change-request { grid-template-columns: 1fr; }
   .availability-search .button, .customer-grid .wide, .change-request .wide, .change-request .button { grid-column: auto; }
   .availability-cars button { min-height: 156px; }
   .booking-detail-form { gap: 4px; }

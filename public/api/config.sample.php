@@ -7,9 +7,9 @@ return [
     'admin_password' => 'CHANGE_ME_NOW',
     'base_url' => 'https://k-mcube.com',
     'cars' => [
-        'kei' => ['label' => '軽自動車', 'model' => 'N-BOXクラス', 'price' => 6600, 'inventory' => 2],
-        'compact' => ['label' => 'コンパクト', 'model' => 'AQUAクラス', 'price' => 7700, 'inventory' => 2],
-        'van' => ['label' => 'ミニバン', 'model' => '7人乗りクラス', 'price' => 9900, 'inventory' => 1],
+        'kei' => ['label' => '軽自動車', 'model' => 'N-BOXクラス', 'price' => 6600, 'hourly_price' => 1100, 'inventory' => 2],
+        'compact' => ['label' => 'コンパクト', 'model' => 'AQUAクラス', 'price' => 7700, 'hourly_price' => 1300, 'inventory' => 2],
+        'van' => ['label' => 'ミニバン', 'model' => '7人乗りクラス', 'price' => 9900, 'hourly_price' => 1700, 'inventory' => 1],
     ],
     'insurance_per_day' => 1100,
     'child_seat_per_day' => 550,
