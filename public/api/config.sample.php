@@ -2,7 +2,7 @@
 return [
     'timezone' => 'Asia/Tokyo',
     'shop_name' => 'KMCUBE Yakushima',
-    'shop_email' => 'CHANGE_ME@k-mcube.com',
+    'shop_email' => 'm-morita@nn-cube.com',
     'mail_from' => 'no-reply@k-mcube.com',
     'admin_password' => 'CHANGE_ME_NOW',
     'base_url' => 'https://k-mcube.com',

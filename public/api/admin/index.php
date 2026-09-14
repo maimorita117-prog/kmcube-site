@@ -92,7 +92,27 @@ if (logged_in() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['block_
 
 if (logged_in() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_id'])) {
     if (!csrf_ok()) $error='操作を確認できませんでした。画面を再読み込みしてください。';
-    else { $status=(string)($_POST['status']??'pending'); if (!in_array($status,['pending','confirmed','cancelled','change_requested'],true)) $error='状態が正しくありません。'; else { $stmt=$pdo->prepare('UPDATE bookings SET status=:status,updated_at=:now,cancelled_at=CASE WHEN :status="cancelled" THEN :now ELSE cancelled_at END WHERE id=:id'); $stmt->execute([':status'=>$status,':now'=>date('Y-m-d H:i:s'),':id'=>(int)$_POST['booking_id']]); $message='予約状態を更新しました。'; } }
+    else {
+        $status = (string)($_POST['status'] ?? 'pending');
+        if (!in_array($status, ['pending','confirmed','cancelled','change_requested'], true)) $error = '状態が正しくありません。';
+        else {
+            $bookingId = (int)$_POST['booking_id'];
+            $beforeStmt = $pdo->prepare('SELECT * FROM bookings WHERE id = :id');
+            $beforeStmt->execute([':id' => $bookingId]);
+            $before = $beforeStmt->fetch();
+            $stmt = $pdo->prepare('UPDATE bookings SET status = :status, updated_at = :now, cancelled_at = CASE WHEN :status = "cancelled" THEN :now ELSE cancelled_at END WHERE id = :id');
+            $stmt->execute([':status' => $status, ':now' => date('Y-m-d H:i:s'), ':id' => $bookingId]);
+            $message = '予約状態を更新しました。';
+            if ($before && $before['status'] !== $status && in_array($status, ['confirmed','cancelled'], true)) {
+                $afterStmt = $pdo->prepare('SELECT * FROM bookings WHERE id = :id');
+                $afterStmt->execute([':id' => $bookingId]);
+                $after = $afterStmt->fetch();
+                $mailStatus = $after ? send_booking_mail($after, '', $config, $status) : ['customer' => false];
+                if ($mailStatus['customer']) $message = $status === 'confirmed' ? '予約を確定し、お客様へ確定メールを送信しました。' : '予約をキャンセルし、お客様へ案内メールを送信しました。';
+                else $error = '予約状態は更新しましたが、お客様へのメール送信を確認できませんでした。メール設定をご確認ください。';
+            }
+        }
+    }
 }
 
 $bookings=[]; $blocks=[]; $vehicles=[]; $vehicleLabels=[];

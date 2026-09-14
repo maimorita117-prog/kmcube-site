@@ -242,6 +242,7 @@ function public_booking(array $row, PDO $pdo): array
         'startDate' => $row['start_date'], 'endDate' => $row['end_date'], 'startTime' => $row['start_time'] ?? '09:00',
         'endTime' => $row['end_time'] ?? '17:00', 'billingMode' => $row['billing_mode'] ?? 'daily', 'pickupLocation' => $row['pickup_location'],
         'people' => (int)$row['people'], 'total' => (int)$row['total'], 'paymentMethod' => $row['payment_method'],
+        'insurance' => (bool)$row['insurance'], 'childSeats' => (int)$row['child_seats'],
         'additionalServices' => json_decode($row['additional_services'] ?: '[]', true) ?: [],
     ];
 }
@@ -270,21 +271,63 @@ function client_rate_limit(PDO $pdo): void
     $stmt->execute([':hash' => $hash, ':time' => $now]);
 }
 
-function send_booking_mail(array $booking, string $accessToken, array $config, string $kind = 'created'): bool
+function send_booking_mail(array $booking, string $accessToken, array $config, string $kind = 'created'): array
 {
-    $labels = ['created' => '予約リクエスト受付', 'cancelled' => '予約キャンセル受付', 'change' => '予約変更リクエスト受付'];
-    $subject = '【KMCUBE】' . ($labels[$kind] ?? '予約のお知らせ') . ' ' . $booking['code'];
+    $labels = ['created' => '予約リクエスト受付', 'confirmed' => '予約確定', 'cancelled' => '予約キャンセル受付', 'change' => '予約変更リクエスト受付'];
+    $eventLabel = $labels[$kind] ?? '予約のお知らせ';
+    $subject = '【KMCUBE】' . $eventLabel . ' ' . $booking['code'];
     $manageUrl = rtrim($config['base_url'], '/') . '/?manage=' . rawurlencode($booking['code']) . '#booking';
-    $message = $config['shop_name'] . "\n\n" . ($labels[$kind] ?? '') . "\n予約番号: {$booking['code']}\n";
-    $message .= "利用日時: {$booking['start_date']} {$booking['start_time']} ～ {$booking['end_date']} {$booking['end_time']}\n料金体系: {$booking['billing_mode']}\n車両: {$booking['car_class']}\n概算金額: ¥" . number_format((int)$booking['total']) . "\n";
-    if ($accessToken !== '') $message .= "管理キー: {$accessToken}\n予約照会: {$manageUrl}\n";
-    $message .= "\nこのメールは予約の受付をお知らせするものです。担当者からの予約確定連絡をお待ちください。";
-    $headers = ['From: ' . $config['mail_from'], 'Content-Type: text/plain; charset=UTF-8'];
-    $encoded = function_exists('mb_encode_mimeheader') ? mb_encode_mimeheader($subject, 'UTF-8') : $subject;
-    $sentUser = @mail($booking['email'], $encoded, $message, implode("\r\n", $headers));
-    $shopEmail = (string)($config['shop_email'] ?? '');
-    if ($shopEmail !== '' && strpos($shopEmail, 'CHANGE_ME') === false) {
-        @mail($shopEmail, $encoded, $message . "\n\nお客様: {$booking['name']}\n電話: {$booking['phone']}\n", implode("\r\n", $headers));
+    $adminUrl = rtrim($config['base_url'], '/') . '/api/admin/';
+    $vehicle = find_vehicle(db(), (string)$booking['car_class'], false);
+    $vehicleLabel = (string)($vehicle['label'] ?? $booking['car_class']);
+    $serviceLabels = ['stay' => '民泊', 'hike' => '登山案内', 'activity' => 'アクティビティ', 'boat' => '漁船遊覧'];
+    $selectedServices = json_decode($booking['additional_services'] ?: '[]', true) ?: [];
+    $selectedServiceLabels = array_map(static fn($id) => $serviceLabels[$id] ?? (string)$id, $selectedServices);
+    $servicesText = $selectedServiceLabels ? implode('、', $selectedServiceLabels) : 'なし';
+    $billingLabel = ($booking['billing_mode'] ?? 'daily') === 'hourly' ? '時間制' : '日数制';
+    $details = "予約番号: {$booking['code']}\n";
+    $details .= "利用日時: {$booking['start_date']} {$booking['start_time']} ～ {$booking['end_date']} {$booking['end_time']}\n";
+    $details .= "料金体系: {$billingLabel}\n車両: {$vehicleLabel}\n受取・返却場所: {$booking['pickup_location']}\n利用人数: {$booking['people']}名\n";
+    $details .= "追加サービス: {$servicesText}\n概算金額（税込）: ¥" . number_format((int)$booking['total']) . "\n";
+
+    $changeDetails = '';
+    if ($kind === 'change') {
+        $change = json_decode($booking['change_request'] ?: 'null', true);
+        if (is_array($change)) {
+            $requestedVehicle = find_vehicle(db(), (string)($change['carClass'] ?? ''), false);
+            $requestedVehicleLabel = (string)($requestedVehicle['label'] ?? ($change['carClass'] ?? ''));
+            $changeDetails = "\n変更希望内容\n希望日時: " . ($change['startDate'] ?? '') . ' ' . ($change['startTime'] ?? '') . ' ～ ' . ($change['endDate'] ?? '') . ' ' . ($change['endTime'] ?? '') . "\n";
+            $changeDetails .= "希望車両: {$requestedVehicleLabel}\nメッセージ: " . (($change['message'] ?? '') ?: 'なし') . "\n";
+        }
     }
-    return $sentUser;
+
+    $customerMessage = "{$booking['name']} 様\n\nKMCUBE Yakushimaをご利用いただきありがとうございます。\n{$eventLabel}として、以下の内容をご案内します。\n\n{$details}{$changeDetails}";
+    if ($accessToken !== '') {
+        $customerMessage .= "\n予約内容の照会・変更に必要な情報\n管理キー: {$accessToken}\n予約照会ページ: {$manageUrl}\n";
+    }
+    if ($kind === 'confirmed') $customerMessage .= "\n予約が確定しました。当日は運転免許証をご持参のうえ、お気をつけてお越しください。";
+    elseif ($kind === 'cancelled') $customerMessage .= "\nキャンセルを受け付けました。キャンセル規定に基づく料金が発生する場合は、担当者からご連絡します。";
+    else $customerMessage .= "\n※この時点では予約確定ではありません。担当者が内容を確認し、改めて予約確定をご連絡します。";
+    $customerMessage .= "\n※変更やキャンセルは予約照会ページからお手続きください。\n\nKMCUBE Yakushima";
+
+    $adminMessage = "KMCUBE予約管理者様\n\n{$eventLabel}がありました。\n管理画面で内容をご確認ください。\n\n{$details}\n";
+    $adminMessage .= "お客様: {$booking['name']}\nメール: {$booking['email']}\n電話: {$booking['phone']}\n到着便・船便: " . ($booking['arrival'] ?: '未入力') . "\nご要望: " . ($booking['notes'] ?: 'なし') . "\n";
+    $adminMessage .= $changeDetails;
+    $adminMessage .= "\n管理画面: {$adminUrl}";
+
+    $shopEmail = (string)($config['shop_email'] ?? 'm-morita@nn-cube.com');
+    if (!filter_var($shopEmail, FILTER_VALIDATE_EMAIL) || strpos($shopEmail, 'CHANGE_ME') !== false) $shopEmail = 'm-morita@nn-cube.com';
+    $mailFrom = (string)($config['mail_from'] ?? 'no-reply@k-mcube.com');
+    if (!filter_var($mailFrom, FILTER_VALIDATE_EMAIL)) $mailFrom = 'no-reply@k-mcube.com';
+    if (function_exists('mb_language')) @mb_language('Japanese');
+    if (function_exists('mb_internal_encoding')) @mb_internal_encoding('UTF-8');
+    $send = static function (string $to, string $mailSubject, string $mailBody, array $mailHeaders): bool {
+        if (function_exists('mb_send_mail')) return @mb_send_mail($to, $mailSubject, $mailBody, implode("\r\n", $mailHeaders));
+        $encodedSubject = function_exists('mb_encode_mimeheader') ? mb_encode_mimeheader($mailSubject, 'UTF-8') : $mailSubject;
+        return @mail($to, $encodedSubject, $mailBody, implode("\r\n", $mailHeaders));
+    };
+    $baseHeaders = ['From: ' . $mailFrom, 'Content-Type: text/plain; charset=UTF-8'];
+    $sentUser = $send((string)$booking['email'], $subject, $customerMessage, array_merge($baseHeaders, ['Reply-To: ' . $shopEmail]));
+    $sentAdmin = $send($shopEmail, '【KMCUBE管理】' . $eventLabel . ' ' . $booking['code'], $adminMessage, array_merge($baseHeaders, ['Reply-To: ' . $booking['email']]));
+    return ['customer' => $sentUser, 'admin' => $sentAdmin];
 }

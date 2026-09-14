@@ -128,8 +128,8 @@ try {
         $stmt = $pdo->prepare('SELECT * FROM bookings WHERE id = :id');
         $stmt->execute([':id' => $id]);
         $booking = $stmt->fetch();
-        $mailSent = send_booking_mail($booking, $token, $config, 'created');
-        json_response(['ok' => true, 'booking' => public_booking($booking, $pdo), 'accessToken' => $token, 'mailSent' => $mailSent], 201);
+        $mailStatus = send_booking_mail($booking, $token, $config, 'created');
+        json_response(['ok' => true, 'booking' => public_booking($booking, $pdo), 'accessToken' => $token, 'mailSent' => $mailStatus['customer'], 'adminMailSent' => $mailStatus['admin']], 201);
     }
 
     if ($action === 'cancel') {

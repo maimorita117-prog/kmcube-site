@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, CalendarDays, CarFront, Check, CreditCard, HouseHeart, Mail, Mountain, Plus, Sailboat, Search, ShieldCheck, Users, Waves } from 'lucide-react';
+import { ArrowRight, Building2, CalendarDays, CarFront, Check, CreditCard, HouseHeart, KeyRound, Mail, Mountain, Plus, Sailboat, Search, ShieldCheck, Users, Waves } from 'lucide-react';
 
 type Language = 'ja' | 'en';
 type BillingMode = 'hourly' | 'daily';
@@ -12,6 +12,7 @@ type Availability = { id: string; label: string; model: string; imageUrl?: strin
 type Booking = {
   code: string; status: string; carClass: string; carLabel: string; startDate: string; endDate: string;
   startTime: string; endTime: string; billingMode: BillingMode; pickupLocation: string; people: number; total: number; paymentMethod: string; additionalServices: string[];
+  insurance: boolean; childSeats: number;
 };
 
 const API_URL = './api/index.php';
@@ -39,8 +40,9 @@ const copy = {
     agree: '料金・キャンセル規定、利用規約、個人情報保護方針に同意します。', submit: 'この内容で予約する', submitting: '予約を登録中…',
     summary: '予約内容・概算料金', days: '日', hours: '時間', base: '車両基本料金', insurancePrice: '安心補償', childPrice: 'チャイルドシート', total: '概算合計',
     tentative: '表示料金は仮料金（税込）です。追加サービスも概算に含まれます。内容確認後に正式料金をご案内します。',
-    success: '予約リクエストを受け付けました', successCopy: '確認メールを送信しました。担当者が内容を確認後、予約確定をご案内します。', mailFailed: '予約は登録されていますが、確認メールを送信できませんでした。予約番号と管理キーを控えてください。', code: '予約番号',
-    lookupIntro: '確認メールに記載された予約番号と管理キーを入力してください。', accessKey: '管理キー', lookup: '予約を表示', cancel: '予約をキャンセル', change: '日程・車種の変更を依頼', changeSend: '変更依頼を送信',
+    success: '予約リクエストを受け付けました', successCopy: 'ご入力のメールアドレスへ予約内容を送りました。担当者が確認後、予約確定をご案内します。', mailFailed: '予約は登録されていますが、確認メールの送信を確認できませんでした。予約番号と管理キーを必ず控えてください。', code: '予約番号',
+    customerMail: '予約者への確認メール', adminMail: '管理会社への予約通知', mailDelivered: '送信手続き済み', mailNeedsCheck: '送信確認が必要', nextTitle: 'このあとの流れ', nextSteps: ['メールで受付内容を確認', 'KMCUBE担当者が空車と内容を確認', '担当者から予約確定のご連絡'], keepKey: '予約番号と管理キーは、照会・変更の際に必要です。大切に保管してください。', manageNow: '予約内容を照会・変更する', requestDetails: 'お申し込み内容', requestedServices: '追加サービス', none: 'なし',
+    lookupIntro: '確認メールに記載された予約番号と管理キーを入力すると、予約内容の確認・変更依頼ができます。', accessKey: '管理キー', lookup: '予約を表示', cancel: '予約をキャンセル', change: '日程・車種の変更を依頼', changeSend: '変更依頼を送信',
     status: '現在の状態', pending: '確認待ち', confirmed: '予約確定', cancelled: 'キャンセル済み', change_requested: '変更確認中',
     apiUnavailable: '現在、予約サーバーへ接続できません。さくらサーバーへ設置後、または設定完了後に利用できます。',
     required: '日時を入力してください。', invalidTime: '返却日時は出発日時より後にしてください。時間制は24時間以内で選択できます。', selectCar: '空いている車両を選択してください。', genericError: '処理できませんでした。入力内容をご確認ください。',
@@ -59,8 +61,9 @@ const copy = {
     agree: 'I agree to the rates, cancellation policy, terms, and privacy policy.', submit: 'Send booking request', submitting: 'Submitting…',
     summary: 'Booking summary', days: 'day(s)', hours: 'hour(s)', base: 'Vehicle', insurancePrice: 'Coverage', childPrice: 'Child seat', total: 'Estimated total',
     tentative: 'All displayed prices are provisional and tax-inclusive. Selected services are included in the estimate; we will confirm the final price after reviewing your request.',
-    success: 'Your booking request has been received', successCopy: 'We sent a confirmation email. Our team will review your request and confirm your booking.', mailFailed: 'Your booking was saved, but the confirmation email could not be sent. Please keep your booking reference and access key.', code: 'Booking reference',
-    lookupIntro: 'Enter the booking reference and access key from your confirmation email.', accessKey: 'Access key', lookup: 'View booking', cancel: 'Cancel booking', change: 'Request date / vehicle change', changeSend: 'Send change request',
+    success: 'Your booking request has been received', successCopy: 'We sent the booking details to your email address. Our team will review your request and contact you with confirmation.', mailFailed: 'Your booking was saved, but we could not confirm email delivery. Please keep your booking reference and access key.', code: 'Booking reference',
+    customerMail: 'Guest confirmation email', adminMail: 'KMCUBE booking notification', mailDelivered: 'Sent', mailNeedsCheck: 'Delivery needs checking', nextTitle: 'What happens next', nextSteps: ['Check the request email', 'KMCUBE reviews availability and details', 'We contact you with final confirmation'], keepKey: 'Keep your booking reference and access key safe. You will need both to view or request changes.', manageNow: 'View or change this booking', requestDetails: 'Request details', requestedServices: 'Additional services', none: 'None',
+    lookupIntro: 'Enter the booking reference and access key from your email to view the booking or request changes.', accessKey: 'Access key', lookup: 'View booking', cancel: 'Cancel booking', change: 'Request date / vehicle change', changeSend: 'Send change request',
     status: 'Status', pending: 'Pending', confirmed: 'Confirmed', cancelled: 'Cancelled', change_requested: 'Change requested',
     apiUnavailable: 'The booking server is unavailable. This feature will work after the Sakura server setup is complete.',
     required: 'Please enter your dates and times.', invalidTime: 'Return must be after pick-up. Hourly bookings are limited to 24 hours.', selectCar: 'Please choose an available vehicle.', genericError: 'We could not complete the request. Please check your details.',
@@ -105,7 +108,7 @@ export function ReservationSystem({ language }: { language: Language }) {
   const [rates, setRates] = useState<BookingRates>(defaultRates);
   const [extras, setExtras] = useState<ExtraServiceId[]>([]);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState<{ code: string; accessToken: string; mailSent: boolean } | null>(null);
+  const [success, setSuccess] = useState<{ code: string; accessToken: string; mailSent: boolean; adminMailSent: boolean } | null>(null);
   const [lookupCode, setLookupCode] = useState('');
   const [lookupToken, setLookupToken] = useState('');
   const [booking, setBooking] = useState<Booking | null>(null);
@@ -178,14 +181,14 @@ export function ReservationSystem({ language }: { language: Language }) {
     setLoading(true); setError('');
     const data = new FormData(event.currentTarget);
     try {
-      const result = await callApi<{ booking: Booking; accessToken: string; mailSent: boolean }>('reserve', {
+      const result = await callApi<{ booking: Booking; accessToken: string; mailSent: boolean; adminMailSent?: boolean }>('reserve', {
         method: 'POST', body: JSON.stringify({
           startDate, endDate, startTime, endTime, billingMode, pickupLocation, people, carClass: selectedCar, insurance, childSeats,
           additionalServices: extras, paymentMethod: 'onsite', name: data.get('name'), email: data.get('email'),
           phone: data.get('phone'), arrival: data.get('arrival'), notes: data.get('notes'), language,
         }),
       });
-      setSuccess({ code: result.booking.code, accessToken: result.accessToken, mailSent: result.mailSent });
+      setSuccess({ code: result.booking.code, accessToken: result.accessToken, mailSent: result.mailSent, adminMailSent: result.adminMailSent !== false });
       setLookupCode(result.booking.code); setLookupToken(result.accessToken); setBooking(result.booking);
     } catch (caught) { setError(caught instanceof Error ? caught.message : t.genericError); }
     finally { setLoading(false); }
@@ -245,9 +248,12 @@ export function ReservationSystem({ language }: { language: Language }) {
 
       {tab === 'book' ? <div className="reservation-workspace">
         {success ? <div className="reservation-success">
-          <span><Check aria-hidden="true" /></span><p>REQUEST RECEIVED</p><h3>{t.success}</h3><p>{success.mailSent ? t.successCopy : t.mailFailed}</p>
-          <dl><div><dt>{t.code}</dt><dd>{success.code}</dd></div><div><dt>{t.accessKey}</dt><dd>{success.accessToken}</dd></div></dl>
-          <button type="button" className="button button-primary" onClick={() => { setTab('manage'); setSuccess(null); }}>{t.manageTab} <ArrowRight aria-hidden="true" /></button>
+          <div className="success-heading"><span><Check aria-hidden="true" /></span><div><p>REQUEST RECEIVED</p><h3>{t.success}</h3><p>{success.mailSent ? t.successCopy : t.mailFailed}</p></div></div>
+          <div className="success-mail-status"><div className={success.mailSent ? 'sent' : 'pending'}><Mail aria-hidden="true" /><span><small>{t.customerMail}</small><strong>{success.mailSent ? t.mailDelivered : t.mailNeedsCheck}</strong></span></div><div className={success.adminMailSent ? 'sent' : 'pending'}><Building2 aria-hidden="true" /><span><small>{t.adminMail}</small><strong>{success.adminMailSent ? t.mailDelivered : t.mailNeedsCheck}</strong></span></div></div>
+          <div className="success-content"><div className="success-next"><h4>{t.nextTitle}</h4><ol>{t.nextSteps.map((step, index) => <li key={step}><span>{index + 1}</span>{step}</li>)}</ol></div>{booking && <div className="success-booking-card"><h4>{t.requestDetails}</h4><dl><div><dt>{t.choose}</dt><dd>{booking.carLabel}</dd></div><div><dt>{t.start} – {t.end}</dt><dd>{booking.startDate} {booking.startTime}<br />{booking.endDate} {booking.endTime}</dd></div><div><dt>{t.total}</dt><dd>{yen(booking.total)}</dd></div></dl></div>}</div>
+          <dl className="success-keys"><div><dt>{t.code}</dt><dd>{success.code}</dd></div><div><dt>{t.accessKey}</dt><dd>{success.accessToken}</dd></div></dl>
+          <p className="success-security-note"><KeyRound aria-hidden="true" />{t.keepKey}</p>
+          <button type="button" className="button button-primary" onClick={() => { setTab('manage'); setSuccess(null); }}>{t.manageNow} <ArrowRight aria-hidden="true" /></button>
         </div> : <>
           <div className="billing-mode" role="radiogroup" aria-label={language === 'ja' ? '料金体系' : 'Rate type'}>
             <label className={billingMode === 'hourly' ? 'selected' : ''}><input type="radio" name="billingMode" value="hourly" checked={billingMode === 'hourly'} onChange={() => setBillingMode('hourly')} /><span><strong>{t.hourly}</strong><small>{t.hourlyNote}</small></span></label>
@@ -317,7 +323,7 @@ export function ReservationSystem({ language }: { language: Language }) {
         <div className="manage-intro"><Mail aria-hidden="true" /><div><h3>{t.manageTab}</h3><p>{t.lookupIntro}</p></div></div>
         <form className="lookup-form" onSubmit={lookupBooking}><label>{t.code}<input value={lookupCode} onChange={(event) => setLookupCode(event.target.value.toUpperCase())} required /></label><label>{t.accessKey}<input value={lookupToken} onChange={(event) => setLookupToken(event.target.value)} required /></label><button className="button button-primary" disabled={loading}>{t.lookup}</button></form>
         {error && <p className="booking-error" role="alert">{error}</p>}
-        {booking && <article className="booking-record"><div><p>{t.status}</p><strong className={`status-${booking.status}`}>{statusLabel(booking.status)}</strong></div><h3>{booking.code}</h3><dl><div><dt>{t.start} – {t.end}</dt><dd>{booking.startDate} {booking.startTime} → {booking.endDate} {booking.endTime}<br />{booking.billingMode === 'hourly' ? t.hourly : t.daily}</dd></div><div><dt>{t.choose}</dt><dd>{booking.carLabel}</dd></div><div><dt>{t.pickup}</dt><dd>{booking.pickupLocation}</dd></div><div><dt>{t.total}</dt><dd>{yen(booking.total)}</dd></div></dl>
+        {booking && <article className="booking-record"><div><p>{t.status}</p><strong className={`status-${booking.status}`}>{statusLabel(booking.status)}</strong></div><h3>{booking.code}</h3><dl><div><dt>{t.start} – {t.end}</dt><dd>{booking.startDate} {booking.startTime} → {booking.endDate} {booking.endTime}<br />{booking.billingMode === 'hourly' ? t.hourly : t.daily}</dd></div><div><dt>{t.choose}</dt><dd>{booking.carLabel}</dd></div><div><dt>{t.pickup}</dt><dd>{booking.pickupLocation}</dd></div><div><dt>{t.people}</dt><dd>{booking.people}</dd></div><div><dt>{t.options}</dt><dd>{booking.insurance ? t.insurance : t.none}{booking.childSeats > 0 ? ` / ${t.childSeat} × ${booking.childSeats}` : ''}</dd></div><div><dt>{t.requestedServices}</dt><dd>{booking.additionalServices.length ? booking.additionalServices.map((id) => extraLabels.find((service) => service.id === id)?.label || id).join('、') : t.none}</dd></div><div><dt>{t.total}</dt><dd>{yen(booking.total)}</dd></div></dl>
           {booking.status !== 'cancelled' && <div className="booking-record-actions"><button type="button" onClick={() => setChangeOpen((value) => !value)}>{t.change}</button><button type="button" className="danger" onClick={cancelBooking}>{t.cancel}</button></div>}
           {changeOpen && booking.status !== 'cancelled' && <form className="change-request" onSubmit={requestChange}><label>{t.start}<input name="requestedStart" type="date" min={today()} defaultValue={booking.startDate} required /></label><label>{t.startTime}<input name="requestedStartTime" type="time" defaultValue={booking.startTime} required /></label><label>{t.end}<input name="requestedEnd" type="date" min={today()} defaultValue={booking.endDate} required /></label><label>{t.endTime}<input name="requestedEndTime" type="time" defaultValue={booking.endTime} required /></label><label>{language === 'ja' ? '料金体系' : 'Rate type'}<select name="requestedBillingMode" defaultValue={booking.billingMode}><option value="hourly">{t.hourly}</option><option value="daily">{t.daily}</option></select></label><label>{t.choose}<select name="requestedCar" defaultValue={booking.carClass}>{cars.map((car) => <option key={car.id} value={car.id}>{car.label}</option>)}</select></label><label className="wide">{t.notes}<textarea name="changeMessage" rows={3} /></label><button className="button button-primary" disabled={loading}>{t.changeSend}</button></form>}
         </article>}
