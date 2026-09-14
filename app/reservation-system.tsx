@@ -21,7 +21,7 @@ const carDefaults: Availability[] = [
 
 const copy = {
   ja: {
-    kicker: 'BOOKING & PRICE', title: '空車・料金確認から予約まで、このページで。',
+    kicker: 'BOOKING & PRICE', title: '空き情報から予約までノンストップ！',
     intro: '日程を入力すると、空いている車両と概算料金を確認できます。民泊や体験の相談も同時に送れます。',
     bookTab: '新しく予約する', manageTab: '予約の照会・変更', hourly: '時間制', daily: '日数制', hourlyNote: '1～24時間。日額を上限に計算', dailyNote: '24時間単位で計算', start: '出発日', end: '返却日', startTime: '出発時刻', endTime: '返却時刻', pickup: '受取・返却場所', people: '利用人数',
     search: '空車と料金を確認', searching: '確認中…', choose: '車両クラスを選択', available: '空車', unavailable: '満車', perDay: '1日・税込',
@@ -41,7 +41,7 @@ const copy = {
     privacyTitle: '個人情報保護方針', privacyText: '取得した氏名、連絡先、旅程情報は、予約管理、本人確認、ご連絡、事故対応のために利用します。法令に基づく場合を除き、本人の同意なく第三者へ提供しません。',
   },
   en: {
-    kicker: 'BOOKING & PRICE', title: 'Check availability, prices, and book here.',
+    kicker: 'BOOKING & PRICE', title: 'From availability to booking—nonstop!',
     intro: 'Enter your dates to see available vehicles and an estimated price. You can also request accommodation and activities.',
     bookTab: 'New booking', manageTab: 'Manage booking', hourly: 'Hourly', daily: 'Daily', hourlyNote: '1–24 hours, capped at the daily rate', dailyNote: 'Calculated in 24-hour units', start: 'Pick-up date', end: 'Return date', startTime: 'Pick-up time', endTime: 'Return time', pickup: 'Pick-up / return location', people: 'Travelers',
     search: 'Check availability', searching: 'Checking…', choose: 'Choose a vehicle class', available: 'available', unavailable: 'Full', perDay: 'per day, tax included',
