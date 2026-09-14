@@ -16,6 +16,10 @@ try {
         json_response(['ok' => true, 'service' => 'KMCUBE Booking API', 'time' => date(DATE_ATOM)]);
     }
 
+    if ($action === 'catalog') {
+        json_response(['ok' => true, 'cars' => array_map('public_vehicle', vehicle_catalog($pdo))]);
+    }
+
     if ($action === 'availability') {
         $start = clean_text($_GET['start'] ?? '', 10);
         $end = clean_text($_GET['end'] ?? '', 10);
@@ -28,11 +32,12 @@ try {
         $hours = booking_hours($startAt, $endAt);
         if ($endAt <= $startAt || ($billingMode === 'hourly' && $hours > 24)) json_response(['ok' => false, 'message' => '返却日時または料金体系をご確認ください。'], 422);
         $cars = [];
-        foreach ($config['cars'] as $id => $car) {
+        foreach (vehicle_catalog($pdo) as $car) {
+            $id = (string)$car['id'];
             $booked = active_booking_count($pdo, $id, $startAt, $endAt);
             $blocked = blocked_vehicle_count($pdo, $id, $startAt, $endAt);
             $cars[] = [
-                'id' => $id, 'label' => $car['label'], 'model' => $car['model'], 'price' => (int)$car['price'], 'hourlyPrice' => (int)$car['hourly_price'],
+                'id' => $id, 'label' => $car['label'], 'model' => $car['model'], 'price' => (int)$car['daily_price'], 'hourlyPrice' => (int)$car['hourly_price'],
                 'inventory' => (int)$car['inventory'], 'booked' => $booked, 'blocked' => $blocked, 'available' => max(0, (int)$car['inventory'] - $booked - $blocked),
             ];
         }
@@ -41,7 +46,7 @@ try {
 
     if ($action === 'reservation') {
         $booking = require_booking($pdo, clean_text($_GET['code'] ?? '', 32), clean_text($_GET['token'] ?? '', 128));
-        json_response(['ok' => true, 'booking' => public_booking($booking, $config)]);
+        json_response(['ok' => true, 'booking' => public_booking($booking, $pdo)]);
     }
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_response(['ok' => false, 'message' => 'この操作は利用できません。'], 405);
@@ -64,7 +69,8 @@ try {
         $endAt = $end . ' ' . $endTime . ':00';
         $hours = booking_hours($startAt, $endAt);
         if ($endAt <= $startAt || ($billingMode === 'hourly' && $hours > 24)) json_response(['ok' => false, 'message' => '返却日時は出発日時より後にしてください。時間制は24時間以内です。'], 422);
-        if (!isset($config['cars'][$carClass])) json_response(['ok' => false, 'message' => '車両クラスをご確認ください。'], 422);
+        $car = find_vehicle($pdo, $carClass);
+        if (!$car) json_response(['ok' => false, 'message' => '現在受付中の車両からお選びください。'], 422);
         if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $phone === '') json_response(['ok' => false, 'message' => 'お名前、メールアドレス、電話番号をご確認ください。'], 422);
 
         $people = max(1, min(8, (int)($body['people'] ?? 1)));
@@ -74,8 +80,7 @@ try {
         $extras = array_values(array_intersect($allowedExtras, is_array($body['additionalServices'] ?? null) ? $body['additionalServices'] : []));
         $billingUnits = $billingMode === 'hourly' ? $hours : max(1, (int)ceil($hours / 24));
         $optionUnits = $billingMode === 'hourly' ? 1 : $billingUnits;
-        $car = $config['cars'][$carClass];
-        $basePrice = $billingMode === 'hourly' ? min((int)$car['price'], (int)$car['hourly_price'] * $billingUnits) : (int)$car['price'] * $billingUnits;
+        $basePrice = $billingMode === 'hourly' ? min((int)$car['daily_price'], (int)$car['hourly_price'] * $billingUnits) : (int)$car['daily_price'] * $billingUnits;
         $total = $basePrice + ($insurance * (int)$config['insurance_per_day'] * $optionUnits) + ($childSeats * (int)$config['child_seat_per_day'] * $optionUnits);
         $token = bin2hex(random_bytes(18));
         $now = date('Y-m-d H:i:s');
@@ -117,7 +122,7 @@ try {
         $stmt->execute([':id' => $id]);
         $booking = $stmt->fetch();
         $mailSent = send_booking_mail($booking, $token, $config, 'created');
-        json_response(['ok' => true, 'booking' => public_booking($booking, $config), 'accessToken' => $token, 'mailSent' => $mailSent], 201);
+        json_response(['ok' => true, 'booking' => public_booking($booking, $pdo), 'accessToken' => $token, 'mailSent' => $mailSent], 201);
     }
 
     if ($action === 'cancel') {
@@ -132,7 +137,7 @@ try {
             $booking = $stmt->fetch();
             send_booking_mail($booking, '', $config, 'cancelled');
         }
-        json_response(['ok' => true, 'booking' => public_booking($booking, $config)]);
+        json_response(['ok' => true, 'booking' => public_booking($booking, $pdo)]);
     }
 
     if ($action === 'change') {
@@ -148,7 +153,7 @@ try {
         $requestedCar = clean_text($body['requestedCar'] ?? '', 20);
         $requestedStartAt = $requestedStart . ' ' . $requestedStartTime . ':00';
         $requestedEndAt = $requestedEnd . ' ' . $requestedEndTime . ':00';
-        if (!valid_date($requestedStart) || !valid_date($requestedEnd) || !valid_time($requestedStartTime) || !valid_time($requestedEndTime) || $requestedEndAt <= $requestedStartAt || ($requestedBillingMode === 'hourly' && booking_hours($requestedStartAt, $requestedEndAt) > 24) || !isset($config['cars'][$requestedCar])) {
+        if (!valid_date($requestedStart) || !valid_date($requestedEnd) || !valid_time($requestedStartTime) || !valid_time($requestedEndTime) || $requestedEndAt <= $requestedStartAt || ($requestedBillingMode === 'hourly' && booking_hours($requestedStartAt, $requestedEndAt) > 24) || !find_vehicle($pdo, $requestedCar)) {
             json_response(['ok' => false, 'message' => '変更希望の日時・車両をご確認ください。'], 422);
         }
         $request = ['startDate' => $requestedStart, 'endDate' => $requestedEnd, 'startTime' => $requestedStartTime, 'endTime' => $requestedEndTime, 'billingMode' => $requestedBillingMode, 'carClass' => $requestedCar, 'message' => clean_text($body['message'] ?? '', 600), 'requestedAt' => date(DATE_ATOM)];
@@ -158,7 +163,7 @@ try {
         $stmt->execute([':id' => $booking['id']]);
         $booking = $stmt->fetch();
         send_booking_mail($booking, '', $config, 'change');
-        json_response(['ok' => true, 'booking' => public_booking($booking, $config)]);
+        json_response(['ok' => true, 'booking' => public_booking($booking, $pdo)]);
     }
 
     json_response(['ok' => false, 'message' => '操作が見つかりません。'], 404);

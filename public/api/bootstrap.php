@@ -7,6 +7,7 @@ date_default_timezone_set($config['timezone'] ?? 'Asia/Tokyo');
 
 function db(): PDO
 {
+    global $config;
     static $pdo = null;
     if ($pdo instanceof PDO) return $pdo;
     $storage = __DIR__ . '/storage';
@@ -61,6 +62,38 @@ function db(): PDO
     foreach ($migrations as $column => $sql) if (!in_array($column, $columns, true)) $pdo->exec($sql);
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_booking_dates ON bookings(car_class, start_date, end_date, status)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_booking_times ON bookings(car_class, start_at, end_at, status)');
+    $pdo->exec('CREATE TABLE IF NOT EXISTS vehicles (
+        id TEXT PRIMARY KEY,
+        label TEXT NOT NULL,
+        model TEXT NOT NULL DEFAULT "",
+        daily_price INTEGER NOT NULL,
+        hourly_price INTEGER NOT NULL,
+        inventory INTEGER NOT NULL DEFAULT 1,
+        active INTEGER NOT NULL DEFAULT 1,
+        display_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    )');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_vehicles_active_order ON vehicles(active, display_order, created_at)');
+    if ((int)$pdo->query('SELECT COUNT(*) FROM vehicles')->fetchColumn() === 0) {
+        $seed = $pdo->prepare('INSERT INTO vehicles(id, label, model, daily_price, hourly_price, inventory, active, display_order, created_at, updated_at) VALUES(:id, :label, :model, :daily, :hourly, :inventory, 1, :sort, :created, :updated)');
+        $now = date('Y-m-d H:i:s');
+        $sort = 10;
+        foreach (($config['cars'] ?? []) as $id => $car) {
+            $seed->execute([
+                ':id' => (string)$id,
+                ':label' => (string)($car['label'] ?? $id),
+                ':model' => (string)($car['model'] ?? ''),
+                ':daily' => max(0, (int)($car['price'] ?? 0)),
+                ':hourly' => max(0, (int)($car['hourly_price'] ?? 0)),
+                ':inventory' => max(0, (int)($car['inventory'] ?? 0)),
+                ':sort' => $sort,
+                ':created' => $now,
+                ':updated' => $now,
+            ]);
+            $sort += 10;
+        }
+    }
     $pdo->exec('CREATE TABLE IF NOT EXISTS availability_blocks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         car_class TEXT NOT NULL,
@@ -73,6 +106,7 @@ function db(): PDO
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_availability_blocks ON availability_blocks(car_class, start_at, end_at)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS request_log (ip_hash TEXT NOT NULL, created_at INTEGER NOT NULL)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_request_log_time ON request_log(created_at)');
+    $pdo->exec('PRAGMA optimize');
     return $pdo;
 }
 
@@ -143,9 +177,37 @@ function blocked_vehicle_count(PDO $pdo, string $carClass, string $startAt, stri
     return (int)$stmt->fetchColumn();
 }
 
-function public_booking(array $row, array $config): array
+function vehicle_catalog(PDO $pdo, bool $activeOnly = true): array
 {
-    $car = $config['cars'][$row['car_class']] ?? ['label' => $row['car_class']];
+    $sql = 'SELECT * FROM vehicles';
+    if ($activeOnly) $sql .= ' WHERE active = 1 AND inventory > 0';
+    $sql .= ' ORDER BY display_order ASC, created_at ASC, id ASC';
+    return $pdo->query($sql)->fetchAll();
+}
+
+function find_vehicle(PDO $pdo, string $id, bool $activeOnly = true): ?array
+{
+    $sql = 'SELECT * FROM vehicles WHERE id = :id';
+    if ($activeOnly) $sql .= ' AND active = 1 AND inventory > 0';
+    $sql .= ' LIMIT 1';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([':id' => $id]);
+    $vehicle = $stmt->fetch();
+    return $vehicle ?: null;
+}
+
+function public_vehicle(array $vehicle): array
+{
+    return [
+        'id' => $vehicle['id'], 'label' => $vehicle['label'], 'model' => $vehicle['model'],
+        'price' => (int)$vehicle['daily_price'], 'hourlyPrice' => (int)$vehicle['hourly_price'],
+        'inventory' => (int)$vehicle['inventory'], 'available' => (int)$vehicle['inventory'],
+    ];
+}
+
+function public_booking(array $row, PDO $pdo): array
+{
+    $car = find_vehicle($pdo, (string)$row['car_class'], false) ?? ['label' => $row['car_class']];
     return [
         'code' => $row['code'], 'status' => $row['status'], 'carClass' => $row['car_class'], 'carLabel' => $car['label'],
         'startDate' => $row['start_date'], 'endDate' => $row['end_date'], 'startTime' => $row['start_time'] ?? '09:00',

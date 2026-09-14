@@ -4,11 +4,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, CalendarDays, CarFront, Check, CreditCard, Mail, Search, ShieldCheck, Users } from 'lucide-react';
 
 type Language = 'ja' | 'en';
-type CarId = 'kei' | 'compact' | 'van';
 type BillingMode = 'hourly' | 'daily';
-type Availability = { id: CarId; label: string; model: string; price: number; hourlyPrice: number; inventory: number; booked: number; blocked: number; available: number };
+type Availability = { id: string; label: string; model: string; price: number; hourlyPrice: number; inventory: number; booked?: number; blocked?: number; available: number };
 type Booking = {
-  code: string; status: string; carClass: CarId; carLabel: string; startDate: string; endDate: string;
+  code: string; status: string; carClass: string; carLabel: string; startDate: string; endDate: string;
   startTime: string; endTime: string; billingMode: BillingMode; pickupLocation: string; people: number; total: number; paymentMethod: string; additionalServices: string[];
 };
 
@@ -89,7 +88,7 @@ export function ReservationSystem({ language }: { language: Language }) {
   const [pickupLocation, setPickupLocation] = useState(language === 'ja' ? '屋久島空港' : 'Yakushima Airport');
   const [people, setPeople] = useState(2);
   const [cars, setCars] = useState(carDefaults);
-  const [selectedCar, setSelectedCar] = useState<CarId | ''>('');
+  const [selectedCar, setSelectedCar] = useState('');
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [apiReady, setApiReady] = useState(true);
@@ -106,6 +105,14 @@ export function ReservationSystem({ language }: { language: Language }) {
   useEffect(() => {
     const code = new URLSearchParams(window.location.search).get('manage');
     if (code) { setLookupCode(code.toUpperCase()); setTab('manage'); }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    callApi<{ cars: Availability[] }>('catalog')
+      .then((payload) => { if (active) setCars(payload.cars); })
+      .catch(() => { /* Local static preview keeps the initial sample catalog. */ });
+    return () => { active = false; };
   }, []);
 
   const hours = countHours(startDate, startTime, endDate, endTime);
@@ -229,7 +236,7 @@ export function ReservationSystem({ language }: { language: Language }) {
           </form>
 
           <div className="booking-step"><div className="booking-step-title"><span>01</span><h3>{t.choose}</h3></div>
-            <div className="availability-cars">{cars.map((car) => {
+            <div className="availability-cars">{cars.length === 0 && <p className="booking-error">{language === 'ja' ? '現在受付中の車両はありません。' : 'No vehicles are currently accepting bookings.'}</p>}{cars.map((car) => {
               const canSelect = searched && apiReady && car.available > 0;
               return <button key={car.id} type="button" className={selectedCar === car.id ? 'selected' : ''} disabled={!canSelect} onClick={() => setSelectedCar(car.id)}>
                 <span className="car-availability">{searched ? (car.available > 0 ? `${t.available} ${car.available}` : t.unavailable) : t.search}</span>
@@ -272,7 +279,7 @@ export function ReservationSystem({ language }: { language: Language }) {
         {error && <p className="booking-error" role="alert">{error}</p>}
         {booking && <article className="booking-record"><div><p>{t.status}</p><strong className={`status-${booking.status}`}>{statusLabel(booking.status)}</strong></div><h3>{booking.code}</h3><dl><div><dt>{t.start} – {t.end}</dt><dd>{booking.startDate} {booking.startTime} → {booking.endDate} {booking.endTime}<br />{booking.billingMode === 'hourly' ? t.hourly : t.daily}</dd></div><div><dt>{t.choose}</dt><dd>{booking.carLabel}</dd></div><div><dt>{t.pickup}</dt><dd>{booking.pickupLocation}</dd></div><div><dt>{t.total}</dt><dd>{yen(booking.total)}</dd></div></dl>
           {booking.status !== 'cancelled' && <div className="booking-record-actions"><button type="button" onClick={() => setChangeOpen((value) => !value)}>{t.change}</button><button type="button" className="danger" onClick={cancelBooking}>{t.cancel}</button></div>}
-          {changeOpen && booking.status !== 'cancelled' && <form className="change-request" onSubmit={requestChange}><label>{t.start}<input name="requestedStart" type="date" min={today()} defaultValue={booking.startDate} required /></label><label>{t.startTime}<input name="requestedStartTime" type="time" defaultValue={booking.startTime} required /></label><label>{t.end}<input name="requestedEnd" type="date" min={today()} defaultValue={booking.endDate} required /></label><label>{t.endTime}<input name="requestedEndTime" type="time" defaultValue={booking.endTime} required /></label><label>{language === 'ja' ? '料金体系' : 'Rate type'}<select name="requestedBillingMode" defaultValue={booking.billingMode}><option value="hourly">{t.hourly}</option><option value="daily">{t.daily}</option></select></label><label>{t.choose}<select name="requestedCar" defaultValue={booking.carClass}>{carDefaults.map((car) => <option key={car.id} value={car.id}>{car.label}</option>)}</select></label><label className="wide">{t.notes}<textarea name="changeMessage" rows={3} /></label><button className="button button-primary" disabled={loading}>{t.changeSend}</button></form>}
+          {changeOpen && booking.status !== 'cancelled' && <form className="change-request" onSubmit={requestChange}><label>{t.start}<input name="requestedStart" type="date" min={today()} defaultValue={booking.startDate} required /></label><label>{t.startTime}<input name="requestedStartTime" type="time" defaultValue={booking.startTime} required /></label><label>{t.end}<input name="requestedEnd" type="date" min={today()} defaultValue={booking.endDate} required /></label><label>{t.endTime}<input name="requestedEndTime" type="time" defaultValue={booking.endTime} required /></label><label>{language === 'ja' ? '料金体系' : 'Rate type'}<select name="requestedBillingMode" defaultValue={booking.billingMode}><option value="hourly">{t.hourly}</option><option value="daily">{t.daily}</option></select></label><label>{t.choose}<select name="requestedCar" defaultValue={booking.carClass}>{cars.map((car) => <option key={car.id} value={car.id}>{car.label}</option>)}</select></label><label className="wide">{t.notes}<textarea name="changeMessage" rows={3} /></label><button className="button button-primary" disabled={loading}>{t.changeSend}</button></form>}
         </article>}
       </div>}
     </section>
