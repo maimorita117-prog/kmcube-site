@@ -13,6 +13,7 @@ return [
         'van' => ['label' => 'ミニバン', 'model' => '7人乗りクラス', 'price' => 9900, 'hourly_price' => 1700, 'inventory' => 1],
     ],
     'insurance_per_day' => 1100,
+    'insurance_wide_per_day' => 2200,
     'child_seat_per_day' => 550,
     'service_prices' => [
         'stay' => 6600,

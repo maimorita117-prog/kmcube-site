@@ -5,19 +5,21 @@ import { ArrowRight, Building2, CalendarDays, CarFront, Check, CreditCard, House
 
 type Language = 'ja' | 'en';
 type BillingMode = 'hourly' | 'daily';
+type InsurancePlan = 'basic' | 'standard' | 'wide';
 type ExtraServiceId = 'stay' | 'hike' | 'activity' | 'boat';
 type ServicePrices = Record<ExtraServiceId, number>;
-type BookingRates = { insurancePerDay: number; childSeatPerDay: number; services: ServicePrices };
+type BookingRates = { insurancePerDay: number; insuranceWidePerDay: number; childSeatPerDay: number; services: ServicePrices };
 type Availability = { id: string; label: string; model: string; imageUrl?: string; price: number; hourlyPrice: number; inventory: number; booked?: number; blocked?: number; available: number };
 type Booking = {
   code: string; status: string; carClass: string; carLabel: string; startDate: string; endDate: string;
   startTime: string; endTime: string; billingMode: BillingMode; pickupLocation: string; people: number; total: number; paymentMethod: string; additionalServices: string[];
-  insurance: boolean; childSeats: number;
+  insurance: boolean; insurancePlan?: InsurancePlan; childSeats: number;
 };
 
 const API_URL = './api/index.php';
 const defaultRates: BookingRates = {
   insurancePerDay: 1100,
+  insuranceWidePerDay: 2200,
   childSeatPerDay: 550,
   services: { stay: 6600, hike: 8800, activity: 6600, boat: 8800 },
 };
@@ -33,12 +35,16 @@ const copy = {
     intro: '日程を入力すると、空いている車両と概算料金を確認できます。民泊や体験の相談も同時に送れます。',
     bookTab: '新しく予約する', manageTab: '予約の照会・変更', hourly: '時間制', daily: '日数制', hourlyNote: '1～24時間。日額を上限に計算', dailyNote: '24時間単位で計算', start: '出発日', end: '返却日', startTime: '出発時刻', endTime: '返却時刻', pickup: '受取・返却場所', people: '利用人数',
     search: '空車と料金を確認', searching: '確認中…', choose: '車両クラスを選択', available: '空車', unavailable: '満車', perDay: '1日・税込',
-    options: '補償・オプション', insurance: '安心補償パック', insuranceNote: '休業補償などをカバー（仮）', childSeat: 'チャイルドシート',
+    options: '保険・補償プランとオプション', insuranceIntro: '事故時の自己負担範囲を確認して、ご希望のプランを1つお選びください。',
+    basicPlan: '基本補償', basicPlanPrice: '追加料金なし', basicPlanDesc: '対人・対物などの基本補償（貸渡料金に含む想定）', basicPlanLimit: '対物・車両の免責額とNOCはお客様負担',
+    insurance: '安心保険プラン', insuranceDesc: '対物・車両の免責額を免除', insuranceLimit: 'NOC、タイヤ・ホイール、車内汚損などは対象外', recommended: 'おすすめ',
+    widePlan: '安心保険プラン・ワイド', widePlanDesc: '安心保険プラン＋NOC免除。自損・当て逃げの車両免責も免除（条件あり）', widePlanLimit: '警察・KMCUBEへの届出など、適用条件があります',
+    insuranceTermsNote: '現在は参考プランです。正式な補償範囲・適用条件・対象外事項は、保険会社との契約および貸渡約款確定後に更新します。', childSeat: 'チャイルドシート',
     services: '一緒に相談するサービス', servicesIntro: '気になる体験をタップすると概算料金にすぐ反映されます。複数選択できます。', stay: '民泊', stayNote: '島で暮らすように泊まる、素泊まりプラン', hike: '登山案内', hikeNote: '初心者も安心。半日ガイドの目安', activity: 'アクティビティ', activityNote: 'カヤックなど自然体験1メニュー', boat: '漁船遊覧', boatNote: '屋久島の海を楽しむ約2時間コース', provisional: '参考料金・税込', selectService: '選択する', selectedService: '選択中', perPersonNight: '1名・1泊', perPersonUse: '1名・1回',
     customer: 'お客様情報', name: 'お名前', email: 'メールアドレス', phone: '電話番号', requiredLabel: '必須', arrival: '到着便・船便（任意）', notes: 'ご要望（任意）',
     payment: 'お支払い方法', onsite: '現地払い', online: 'オンライン決済', onlineSoon: '決済会社接続後に利用可能',
     agree: '料金・キャンセル規定、利用規約、個人情報保護方針に同意します。', submit: 'この内容で予約する', submitting: '予約を登録中…',
-    summary: '予約内容・概算料金', days: '日', hours: '時間', base: '車両基本料金', insurancePrice: '安心補償', childPrice: 'チャイルドシート', total: '概算合計',
+    summary: '予約内容・概算料金', days: '日', hours: '時間', base: '車両基本料金', insurancePrice: '保険・補償プラン', childPrice: 'チャイルドシート', total: '概算合計',
     tentative: '表示料金は仮料金（税込）です。追加サービスも概算に含まれます。内容確認後に正式料金をご案内します。',
     success: 'ご予約ありがとうございます。', successCopy: '予約を受け付け、ご入力のメールアドレスへ内容を送りました。担当者が確認後、予約確定をご案内します。', mailFailed: '予約は登録されていますが、確認メールの送信を確認できませんでした。予約番号と管理キーを必ず控えてください。', code: '予約番号',
     customerMail: '予約者への確認メール', adminMail: '管理会社への予約通知', mailDelivered: '送信手続き済み', mailNeedsCheck: '送信確認が必要', nextTitle: 'このあとの流れ', nextSteps: ['メールで受付内容を確認', 'KMCUBE担当者が空車と内容を確認', '担当者から予約確定のご連絡'], keepKey: '予約番号と管理キーは、照会・変更の際に必要です。大切に保管してください。', manageNow: '予約内容を照会・変更する', requestDetails: 'お申し込み内容', requestedServices: '追加サービス', none: 'なし',
@@ -54,7 +60,11 @@ const copy = {
     intro: 'Enter your dates to see available vehicles and an estimated price. You can also request accommodation and activities.',
     bookTab: 'New booking', manageTab: 'Manage booking', hourly: 'Hourly', daily: 'Daily', hourlyNote: '1–24 hours, capped at the daily rate', dailyNote: 'Calculated in 24-hour units', start: 'Pick-up date', end: 'Return date', startTime: 'Pick-up time', endTime: 'Return time', pickup: 'Pick-up / return location', people: 'Travelers',
     search: 'Check availability', searching: 'Checking…', choose: 'Choose a vehicle class', available: 'available', unavailable: 'Full', perDay: 'per day, tax included',
-    options: 'Coverage & options', insurance: 'Peace-of-mind coverage', insuranceNote: 'Includes loss-of-use coverage (provisional)', childSeat: 'Child seat',
+    options: 'Insurance, coverage & options', insuranceIntro: 'Review your potential out-of-pocket costs and choose one plan.',
+    basicPlan: 'Basic coverage', basicPlanPrice: 'No additional charge', basicPlanDesc: 'Basic liability coverage (planned to be included in the rental rate)', basicPlanLimit: 'You pay the policy excess and NOC',
+    insurance: 'Peace-of-mind insurance plan', insuranceDesc: 'Waives the property and vehicle damage excess', insuranceLimit: 'NOC, tyres, wheels and interior damage are excluded', recommended: 'Recommended',
+    widePlan: 'Peace-of-mind insurance plan Wide', widePlanDesc: 'Adds an NOC waiver and conditional excess waiver for single-vehicle and hit-and-run damage', widePlanLimit: 'Police and KMCUBE reporting and other conditions apply',
+    insuranceTermsNote: 'These are provisional reference plans. Final coverage, conditions and exclusions will be updated after the insurer agreement and rental terms are confirmed.', childSeat: 'Child seat',
     services: 'Services to request together', servicesIntro: 'Tap any experience to add its estimated price. You can select more than one.', stay: 'Guesthouse', stayNote: 'Simple room-only island stay', hike: 'Hiking guide', hikeNote: 'Estimated half-day beginner-friendly guide', activity: 'Activities', activityNote: 'One nature experience such as kayaking', boat: 'Boat cruise', boatNote: 'Approx. two-hour cruise around Yakushima', provisional: 'Estimated, tax included', selectService: 'Select', selectedService: 'Selected', perPersonNight: 'per guest / night', perPersonUse: 'per guest / activity',
     customer: 'Guest details', name: 'Name', email: 'Email', phone: 'Phone', requiredLabel: 'Required', arrival: 'Flight or ferry (optional)', notes: 'Requests (optional)',
     payment: 'Payment', onsite: 'Pay on arrival', online: 'Online payment', onlineSoon: 'Available after payment setup',
@@ -104,7 +114,7 @@ export function ReservationSystem({ language }: { language: Language }) {
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [apiReady, setApiReady] = useState(true);
-  const [insurance, setInsurance] = useState(true);
+  const [insurancePlan, setInsurancePlan] = useState<InsurancePlan>('standard');
   const [childSeats, setChildSeats] = useState(0);
   const [rates, setRates] = useState<BookingRates>(defaultRates);
   const [extras, setExtras] = useState<ExtraServiceId[]>([]);
@@ -146,7 +156,8 @@ export function ReservationSystem({ language }: { language: Language }) {
   const costs = useMemo(() => {
     const base = billingMode === 'hourly' ? Math.min(currentCar?.price || 0, (currentCar?.hourlyPrice || 0) * billingUnits) : (currentCar?.price || 0) * billingUnits;
     const optionUnits = billingMode === 'hourly' ? 1 : billingUnits;
-    const coverage = insurance ? rates.insurancePerDay * optionUnits : 0;
+    const coverageRate = insurancePlan === 'basic' ? 0 : insurancePlan === 'wide' ? rates.insuranceWidePerDay : rates.insurancePerDay;
+    const coverage = coverageRate * optionUnits;
     const seat = childSeats * rates.childSeatPerDay * optionUnits;
     const stayUnits = Math.max(1, Math.ceil(hours / 24));
     const services = extras.map((id) => ({
@@ -156,7 +167,7 @@ export function ReservationSystem({ language }: { language: Language }) {
     }));
     const servicesTotal = services.reduce((sum, service) => sum + service.amount, 0);
     return { base, coverage, seat, services, servicesTotal, total: base + coverage + seat + servicesTotal };
-  }, [currentCar, billingMode, billingUnits, insurance, childSeats, rates, extras, people, hours]);
+  }, [currentCar, billingMode, billingUnits, insurancePlan, childSeats, rates, extras, people, hours]);
 
   async function searchAvailability(event: React.FormEvent) {
     event.preventDefault();
@@ -192,7 +203,7 @@ export function ReservationSystem({ language }: { language: Language }) {
     try {
       const result = await callApi<{ booking: Booking; accessToken: string; mailSent: boolean; adminMailSent?: boolean }>('reserve', {
         method: 'POST', body: JSON.stringify({
-          startDate, endDate, startTime, endTime, billingMode, pickupLocation, people, carClass: selectedCar, insurance, childSeats,
+          startDate, endDate, startTime, endTime, billingMode, pickupLocation, people, carClass: selectedCar, insurancePlan, insurance: insurancePlan !== 'basic', childSeats,
           additionalServices: extras, paymentMethod: 'onsite', name: data.get('name'), email: data.get('email'),
           phone: data.get('phone'), arrival: data.get('arrival'), notes: data.get('notes'), language,
         }),
@@ -235,6 +246,12 @@ export function ReservationSystem({ language }: { language: Language }) {
   }
 
   const statusLabel = (status: string) => t[status as keyof typeof t] || status;
+  const insurancePlanLabel = (plan?: InsurancePlan, legacyInsurance = false) => {
+    const resolved = plan || (legacyInsurance ? 'standard' : 'basic');
+    if (resolved === 'wide') return t.widePlan;
+    if (resolved === 'standard') return t.insurance;
+    return t.basicPlan;
+  };
   const extraLabels = [
     { id: 'stay' as const, label: t.stay, note: t.stayNote, unit: t.perPersonNight, icon: HouseHeart },
     { id: 'hike' as const, label: t.hike, note: t.hikeNote, unit: t.perPersonUse, icon: Mountain },
@@ -260,7 +277,7 @@ export function ReservationSystem({ language }: { language: Language }) {
           <div className="success-heading"><span><Check aria-hidden="true" /></span><div><p>REQUEST RECEIVED</p><h3 id="booking-complete-title">{t.success}</h3><p>{success.mailSent ? t.successCopy : t.mailFailed}</p></div></div>
           <dl className="success-keys"><div><dt>{t.code}</dt><dd>{success.code}</dd></div><div><dt>{t.accessKey}</dt><dd>{success.accessToken}</dd></div></dl>
           <div className="success-mail-status"><div className={success.mailSent ? 'sent' : 'pending'}><Mail aria-hidden="true" /><span><small>{t.customerMail}</small><strong>{success.mailSent ? t.mailDelivered : t.mailNeedsCheck}</strong></span></div><div className={success.adminMailSent ? 'sent' : 'pending'}><Building2 aria-hidden="true" /><span><small>{t.adminMail}</small><strong>{success.adminMailSent ? t.mailDelivered : t.mailNeedsCheck}</strong></span></div></div>
-          <div className="success-content"><div className="success-next"><h4>{t.nextTitle}</h4><ol>{t.nextSteps.map((step, index) => <li key={step}><span>{index + 1}</span>{step}</li>)}</ol></div>{booking && <div className="success-booking-card"><h4>{t.requestDetails}</h4><dl><div><dt>{t.choose}</dt><dd>{booking.carLabel}</dd></div><div><dt>{t.start} – {t.end}</dt><dd>{booking.startDate} {booking.startTime}<br />{booking.endDate} {booking.endTime}</dd></div><div><dt>{t.pickup}</dt><dd>{booking.pickupLocation}</dd></div><div><dt>{t.people}</dt><dd>{booking.people}</dd></div><div><dt>{t.options}</dt><dd>{booking.insurance ? t.insurance : t.none}{booking.childSeats > 0 ? ` / ${t.childSeat} × ${booking.childSeats}` : ''}</dd></div><div><dt>{t.requestedServices}</dt><dd>{booking.additionalServices.length ? booking.additionalServices.map((id) => extraLabels.find((service) => service.id === id)?.label || id).join('、') : t.none}</dd></div><div><dt>{t.total}</dt><dd>{yen(booking.total)}</dd></div></dl></div>}</div>
+          <div className="success-content"><div className="success-next"><h4>{t.nextTitle}</h4><ol>{t.nextSteps.map((step, index) => <li key={step}><span>{index + 1}</span>{step}</li>)}</ol></div>{booking && <div className="success-booking-card"><h4>{t.requestDetails}</h4><dl><div><dt>{t.choose}</dt><dd>{booking.carLabel}</dd></div><div><dt>{t.start} – {t.end}</dt><dd>{booking.startDate} {booking.startTime}<br />{booking.endDate} {booking.endTime}</dd></div><div><dt>{t.pickup}</dt><dd>{booking.pickupLocation}</dd></div><div><dt>{t.people}</dt><dd>{booking.people}</dd></div><div><dt>{t.options}</dt><dd>{insurancePlanLabel(booking.insurancePlan, booking.insurance)}{booking.childSeats > 0 ? ` / ${t.childSeat} × ${booking.childSeats}` : ''}</dd></div><div><dt>{t.requestedServices}</dt><dd>{booking.additionalServices.length ? booking.additionalServices.map((id) => extraLabels.find((service) => service.id === id)?.label || id).join('、') : t.none}</dd></div><div><dt>{t.total}</dt><dd>{yen(booking.total)}</dd></div></dl></div>}</div>
           <p className="success-security-note"><KeyRound aria-hidden="true" />{t.keepKey}</p>
           <button type="button" className="button button-primary" onClick={() => { setTab('manage'); setSuccess(null); }}>{t.manageNow} <ArrowRight aria-hidden="true" /></button>
         </div> : <>
@@ -291,8 +308,14 @@ export function ReservationSystem({ language }: { language: Language }) {
           <form className="booking-detail-form" onSubmit={submitBooking}>
             <div className="booking-form-main">
               <div className="booking-step"><div className="booking-step-title"><span>02</span><h3>{t.options}</h3></div>
-                <div className="option-grid">
-                  <label className={insurance ? 'checked' : ''}><input type="checkbox" checked={insurance} onChange={(event) => setInsurance(event.target.checked)} /><ShieldCheck aria-hidden="true" /><span><strong>{t.insurance}</strong><small>{t.insuranceNote}<br />{yen(rates.insurancePerDay)} / {t.perDay}</small></span></label>
+                <p className="insurance-plan-intro">{t.insuranceIntro}</p>
+                <div className="insurance-plan-grid" role="radiogroup" aria-label={t.insurancePrice}>
+                  <label className={insurancePlan === 'basic' ? 'checked' : ''}><input type="radio" name="insurancePlan" value="basic" checked={insurancePlan === 'basic'} onChange={() => setInsurancePlan('basic')} /><span className="insurance-plan-icon"><ShieldCheck aria-hidden="true" /></span><span className="insurance-plan-copy"><strong>{t.basicPlan}</strong><b>{t.basicPlanPrice}</b><small>{t.basicPlanDesc}</small><em>{t.basicPlanLimit}</em></span></label>
+                  <label className={insurancePlan === 'standard' ? 'checked' : ''}><input type="radio" name="insurancePlan" value="standard" checked={insurancePlan === 'standard'} onChange={() => setInsurancePlan('standard')} /><span className="insurance-recommended">{t.recommended}</span><span className="insurance-plan-icon"><ShieldCheck aria-hidden="true" /></span><span className="insurance-plan-copy"><strong>{t.insurance}</strong><b>+ {yen(rates.insurancePerDay)} / {t.perDay}</b><small>{t.insuranceDesc}</small><em>{t.insuranceLimit}</em></span></label>
+                  <label className={insurancePlan === 'wide' ? 'checked' : ''}><input type="radio" name="insurancePlan" value="wide" checked={insurancePlan === 'wide'} onChange={() => setInsurancePlan('wide')} /><span className="insurance-plan-icon"><ShieldCheck aria-hidden="true" /></span><span className="insurance-plan-copy"><strong>{t.widePlan}</strong><b>+ {yen(rates.insuranceWidePerDay)} / {t.perDay}</b><small>{t.widePlanDesc}</small><em>{t.widePlanLimit}</em></span></label>
+                </div>
+                <p className="insurance-terms-note">{t.insuranceTermsNote}</p>
+                <div className="option-grid option-grid-secondary">
                   <label><input type="number" min="0" max="3" value={childSeats} onChange={(event) => setChildSeats(Number(event.target.value))} /><Users aria-hidden="true" /><span><strong>{t.childSeat}</strong><small>{yen(rates.childSeatPerDay)} / {t.perDay}</small></span></label>
                 </div>
               </div>
@@ -317,7 +340,7 @@ export function ReservationSystem({ language }: { language: Language }) {
             <aside className="reservation-summary">
               <p>YOUR BOOKING</p><h3>{t.summary}</h3>
               <dl><div><dt>{currentCar?.label || t.choose}<small>{startDate || '—'} {startTime} → {endDate || '—'} {endTime}・{billingUnits}{billingMode === 'hourly' ? t.hours : t.days}</small></dt><dd>{yen(costs.base)}</dd></div>
-                <div><dt>{t.insurancePrice}</dt><dd>{yen(costs.coverage)}</dd></div><div><dt>{t.childPrice} × {childSeats}</dt><dd>{yen(costs.seat)}</dd></div>
+                <div><dt>{t.insurancePrice}<small>{insurancePlanLabel(insurancePlan)}</small></dt><dd>{yen(costs.coverage)}</dd></div><div><dt>{t.childPrice} × {childSeats}</dt><dd>{yen(costs.seat)}</dd></div>
                 {costs.services.map((service) => <div key={service.id} className="summary-service"><dt>{extraLabels.find((item) => item.id === service.id)?.label}<small>{service.quantity} × {yen(rates.services[service.id])}</small></dt><dd>{yen(service.amount)}</dd></div>)}
                 <div className="summary-total"><dt>{t.total}</dt><dd>{yen(costs.total)}</dd></div></dl>
               <p className="summary-note">{t.tentative}</p>
@@ -332,7 +355,7 @@ export function ReservationSystem({ language }: { language: Language }) {
         <div className="manage-intro"><Mail aria-hidden="true" /><div><h3>{t.manageTab}</h3><p>{t.lookupIntro}</p></div></div>
         <form className="lookup-form" onSubmit={lookupBooking}><label>{t.code}<input value={lookupCode} onChange={(event) => setLookupCode(event.target.value.toUpperCase())} required /></label><label>{t.accessKey}<input value={lookupToken} onChange={(event) => setLookupToken(event.target.value)} required /></label><button className="button button-primary" disabled={loading}>{t.lookup}</button></form>
         {error && <p className="booking-error" role="alert">{error}</p>}
-        {booking && <article className="booking-record"><div><p>{t.status}</p><strong className={`status-${booking.status}`}>{statusLabel(booking.status)}</strong></div><h3>{booking.code}</h3><dl><div><dt>{t.start} – {t.end}</dt><dd>{booking.startDate} {booking.startTime} → {booking.endDate} {booking.endTime}<br />{booking.billingMode === 'hourly' ? t.hourly : t.daily}</dd></div><div><dt>{t.choose}</dt><dd>{booking.carLabel}</dd></div><div><dt>{t.pickup}</dt><dd>{booking.pickupLocation}</dd></div><div><dt>{t.people}</dt><dd>{booking.people}</dd></div><div><dt>{t.options}</dt><dd>{booking.insurance ? t.insurance : t.none}{booking.childSeats > 0 ? ` / ${t.childSeat} × ${booking.childSeats}` : ''}</dd></div><div><dt>{t.requestedServices}</dt><dd>{booking.additionalServices.length ? booking.additionalServices.map((id) => extraLabels.find((service) => service.id === id)?.label || id).join('、') : t.none}</dd></div><div><dt>{t.total}</dt><dd>{yen(booking.total)}</dd></div></dl>
+        {booking && <article className="booking-record"><div><p>{t.status}</p><strong className={`status-${booking.status}`}>{statusLabel(booking.status)}</strong></div><h3>{booking.code}</h3><dl><div><dt>{t.start} – {t.end}</dt><dd>{booking.startDate} {booking.startTime} → {booking.endDate} {booking.endTime}<br />{booking.billingMode === 'hourly' ? t.hourly : t.daily}</dd></div><div><dt>{t.choose}</dt><dd>{booking.carLabel}</dd></div><div><dt>{t.pickup}</dt><dd>{booking.pickupLocation}</dd></div><div><dt>{t.people}</dt><dd>{booking.people}</dd></div><div><dt>{t.options}</dt><dd>{insurancePlanLabel(booking.insurancePlan, booking.insurance)}{booking.childSeats > 0 ? ` / ${t.childSeat} × ${booking.childSeats}` : ''}</dd></div><div><dt>{t.requestedServices}</dt><dd>{booking.additionalServices.length ? booking.additionalServices.map((id) => extraLabels.find((service) => service.id === id)?.label || id).join('、') : t.none}</dd></div><div><dt>{t.total}</dt><dd>{yen(booking.total)}</dd></div></dl>
           {booking.status !== 'cancelled' && <div className="booking-record-actions"><button type="button" onClick={() => setChangeOpen((value) => !value)}>{t.change}</button><button type="button" className="danger" onClick={cancelBooking}>{t.cancel}</button></div>}
           {changeOpen && booking.status !== 'cancelled' && <form className="change-request" onSubmit={requestChange}><label>{t.start}<input name="requestedStart" type="date" min={today()} defaultValue={booking.startDate} required /></label><label>{t.startTime}<input name="requestedStartTime" type="time" defaultValue={booking.startTime} required /></label><label>{t.end}<input name="requestedEnd" type="date" min={today()} defaultValue={booking.endDate} required /></label><label>{t.endTime}<input name="requestedEndTime" type="time" defaultValue={booking.endTime} required /></label><label>{language === 'ja' ? '料金体系' : 'Rate type'}<select name="requestedBillingMode" defaultValue={booking.billingMode}><option value="hourly">{t.hourly}</option><option value="daily">{t.daily}</option></select></label><label>{t.choose}<select name="requestedCar" defaultValue={booking.carClass}>{cars.map((car) => <option key={car.id} value={car.id}>{car.label}</option>)}</select></label><label className="wide">{t.notes}<textarea name="changeMessage" rows={3} /></label><button className="button button-primary" disabled={loading}>{t.changeSend}</button></form>}
         </article>}

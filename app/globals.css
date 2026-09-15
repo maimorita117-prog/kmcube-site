@@ -286,6 +286,24 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
 .option-grid span { display: grid; gap: 4px; }
 .option-grid strong { color: var(--foreground); font-size: .91rem; }
 .option-grid small { font-size: .7rem; line-height: 1.5; }
+.insurance-plan-intro { margin: -2px 0 13px; color: #5b756c; font-size: .83rem; line-height: 1.75; }
+.insurance-plan-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; }
+.insurance-plan-grid > label { position: relative; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 11px; min-height: 190px; padding: 20px 15px 16px; color: #536e65; background: #fffdf6; border: 2px solid #d6dfce; border-radius: 20px 20px 28px 20px; cursor: pointer; transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease; }
+.insurance-plan-grid > label:hover { transform: translateY(-2px); border-color: #9fbd94; box-shadow: 0 10px 24px rgba(32, 81, 62, .1); }
+.insurance-plan-grid > label:focus-within { outline: 3px solid rgba(248, 187, 52, .38); outline-offset: 3px; }
+.insurance-plan-grid > label.checked { background: linear-gradient(145deg, #fffdf5 0%, #e8f2df 100%); border-color: var(--primary); box-shadow: 0 13px 28px rgba(24, 83, 66, .13); }
+.insurance-plan-grid input { position: absolute; opacity: 0; }
+.insurance-plan-icon { display: grid; place-items: center; width: 40px; height: 40px; color: var(--primary); background: #ffedb6; border-radius: 13px 13px 17px 13px; }
+.insurance-plan-icon svg { width: 22px; height: 22px; }
+.insurance-plan-copy { display: grid; align-content: start; gap: 7px; }
+.insurance-plan-copy strong { color: var(--foreground); font-size: .88rem; line-height: 1.45; }
+.insurance-plan-copy b { color: var(--primary); font-family: Arial, sans-serif; font-size: .75rem; }
+.insurance-plan-copy small { color: #4f6c62; font-size: .72rem; font-weight: 750; line-height: 1.55; }
+.insurance-plan-copy em { padding-top: 7px; color: #765c27; border-top: 1px dashed #d8c890; font-size: .66rem; font-style: normal; line-height: 1.5; }
+.insurance-recommended { position: absolute; top: -10px; right: 12px; padding: 4px 9px; color: #664c13; background: var(--secondary); border-radius: 999px; font-size: .63rem; font-weight: 900; }
+.insurance-terms-note { margin: 11px 2px 14px; padding: 11px 13px; color: #6e6654; background: #f7f2df; border-radius: 11px; font-size: .68rem; line-height: 1.65; }
+.option-grid-secondary { grid-template-columns: minmax(0, 1fr); }
+.option-grid-secondary label { min-height: 72px; }
 .extra-service-intro { margin: -3px 0 14px; color: #5b756c; font-size: .83rem; line-height: 1.75; }
 .extra-service-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
 .extra-service-grid label { position: relative; display: grid; grid-template-columns: 54px minmax(0, 1fr); grid-template-areas: "icon copy" "price choice"; gap: 15px 14px; min-height: 176px; padding: 18px; color: #536e65; background: #fffdf6; border: 2px solid #d7e0cf; border-radius: 22px 22px 30px 22px; box-shadow: 0 7px 18px rgba(41, 81, 64, .05); cursor: pointer; transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease; }
@@ -477,10 +495,11 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .reservation-heading h2 { font-size: 2.2rem; }
   .reservation-tabs { display: grid; border-radius: 19px; }
   .reservation-tabs button { border-radius: 14px; }
-  .reservation-policies, .billing-mode, .availability-search, .availability-cars, .option-grid, .extra-service-grid, .customer-grid, .lookup-form, .change-request { grid-template-columns: 1fr; }
+  .reservation-policies, .billing-mode, .availability-search, .availability-cars, .option-grid, .insurance-plan-grid, .extra-service-grid, .customer-grid, .lookup-form, .change-request { grid-template-columns: 1fr; }
   .availability-search .button, .customer-grid .wide, .change-request .wide, .change-request .button { grid-column: auto; }
   .availability-cars button { min-height: 0; }
   .extra-service-grid label { min-height: 164px; }
+  .insurance-plan-grid > label { min-height: 0; }
   .booking-detail-form { gap: 4px; }
   .reservation-summary { margin-top: 22px; }
   .reservation-success { padding: 28px 18px; }

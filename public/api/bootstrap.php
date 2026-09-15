@@ -35,6 +35,7 @@ function db(): PDO
         pickup_location TEXT NOT NULL,
         people INTEGER NOT NULL,
         insurance INTEGER NOT NULL DEFAULT 0,
+        insurance_plan TEXT NOT NULL DEFAULT "standard",
         child_seats INTEGER NOT NULL DEFAULT 0,
         additional_services TEXT NOT NULL DEFAULT "[]",
         payment_method TEXT NOT NULL DEFAULT "onsite",
@@ -52,14 +53,17 @@ function db(): PDO
         cancelled_at TEXT
     )');
     $columns = array_column($pdo->query('PRAGMA table_info(bookings)')->fetchAll(), 'name');
+    $insurancePlanColumnAdded = !in_array('insurance_plan', $columns, true);
     $migrations = [
         'start_time' => 'ALTER TABLE bookings ADD COLUMN start_time TEXT NOT NULL DEFAULT "09:00"',
         'end_time' => 'ALTER TABLE bookings ADD COLUMN end_time TEXT NOT NULL DEFAULT "17:00"',
         'billing_mode' => 'ALTER TABLE bookings ADD COLUMN billing_mode TEXT NOT NULL DEFAULT "daily"',
         'start_at' => 'ALTER TABLE bookings ADD COLUMN start_at TEXT',
         'end_at' => 'ALTER TABLE bookings ADD COLUMN end_at TEXT',
+        'insurance_plan' => 'ALTER TABLE bookings ADD COLUMN insurance_plan TEXT NOT NULL DEFAULT "standard"',
     ];
     foreach ($migrations as $column => $sql) if (!in_array($column, $columns, true)) $pdo->exec($sql);
+    if ($insurancePlanColumnAdded) $pdo->exec('UPDATE bookings SET insurance_plan = CASE WHEN insurance = 1 THEN "standard" ELSE "basic" END');
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_booking_dates ON bookings(car_class, start_date, end_date, status)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_booking_times ON bookings(car_class, start_at, end_at, status)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS vehicles (
@@ -151,6 +155,7 @@ function booking_rates(): array
     foreach ($serviceDefaults as $id => $price) $services[$id] = max(0, (int)($configuredServices[$id] ?? $price));
     return [
         'insurancePerDay' => max(0, (int)($config['insurance_per_day'] ?? 1100)),
+        'insuranceWidePerDay' => max(0, (int)($config['insurance_wide_per_day'] ?? 2200)),
         'childSeatPerDay' => max(0, (int)($config['child_seat_per_day'] ?? 550)),
         'services' => $services,
     ];
@@ -242,7 +247,9 @@ function public_booking(array $row, PDO $pdo): array
         'startDate' => $row['start_date'], 'endDate' => $row['end_date'], 'startTime' => $row['start_time'] ?? '09:00',
         'endTime' => $row['end_time'] ?? '17:00', 'billingMode' => $row['billing_mode'] ?? 'daily', 'pickupLocation' => $row['pickup_location'],
         'people' => (int)$row['people'], 'total' => (int)$row['total'], 'paymentMethod' => $row['payment_method'],
-        'insurance' => (bool)$row['insurance'], 'childSeats' => (int)$row['child_seats'],
+        'insurance' => (bool)$row['insurance'],
+        'insurancePlan' => $row['insurance_plan'] ?? (!empty($row['insurance']) ? 'standard' : 'basic'),
+        'childSeats' => (int)$row['child_seats'],
         'additionalServices' => json_decode($row['additional_services'] ?: '[]', true) ?: [],
     ];
 }
@@ -286,7 +293,9 @@ function send_booking_mail(array $booking, string $accessToken, array $config, s
     foreach ($selectedServices as $id) $selectedServiceLabels[] = $serviceLabels[$id] ?? (string)$id;
     $servicesText = $selectedServiceLabels ? implode('、', $selectedServiceLabels) : 'なし';
     $billingLabel = ($booking['billing_mode'] ?? 'daily') === 'hourly' ? '時間制' : '日数制';
-    $coverageText = !empty($booking['insurance']) ? '安心補償パックあり' : '安心補償パックなし';
+    $insurancePlan = (string)($booking['insurance_plan'] ?? (!empty($booking['insurance']) ? 'standard' : 'basic'));
+    $insuranceLabels = ['basic' => '基本補償', 'standard' => '安心保険プラン', 'wide' => '安心保険プラン・ワイド'];
+    $coverageText = $insuranceLabels[$insurancePlan] ?? $insuranceLabels['basic'];
     $childSeatText = (int)$booking['child_seats'] > 0 ? 'チャイルドシート ' . (int)$booking['child_seats'] . '台' : 'チャイルドシートなし';
     $details = "予約番号: {$booking['code']}\n";
     $details .= "利用日時: {$booking['start_date']} {$booking['start_time']} ～ {$booking['end_date']} {$booking['end_time']}\n";

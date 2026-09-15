@@ -80,7 +80,10 @@ try {
         if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $phone === '') json_response(['ok' => false, 'message' => 'お名前、メールアドレス、電話番号をご確認ください。'], 422);
 
         $people = max(1, min(8, (int)($body['people'] ?? 1)));
-        $insurance = !empty($body['insurance']) ? 1 : 0;
+        $allowedInsurancePlans = ['basic', 'standard', 'wide'];
+        $insurancePlan = (string)($body['insurancePlan'] ?? (!empty($body['insurance']) ? 'standard' : 'basic'));
+        if (!in_array($insurancePlan, $allowedInsurancePlans, true)) $insurancePlan = 'basic';
+        $insurance = $insurancePlan === 'basic' ? 0 : 1;
         $childSeats = max(0, min(3, (int)($body['childSeats'] ?? 0)));
         $allowedExtras = ['stay', 'hike', 'activity', 'boat'];
         $extras = array_values(array_intersect($allowedExtras, is_array($body['additionalServices'] ?? null) ? $body['additionalServices'] : []));
@@ -93,7 +96,8 @@ try {
             $quantity = $people * ($extra === 'stay' ? max(1, (int)ceil($hours / 24)) : 1);
             $serviceTotal += (int)$rates['services'][$extra] * $quantity;
         }
-        $total = $basePrice + ($insurance * (int)$rates['insurancePerDay'] * $optionUnits) + ($childSeats * (int)$rates['childSeatPerDay'] * $optionUnits) + $serviceTotal;
+        $insuranceRate = $insurancePlan === 'wide' ? (int)$rates['insuranceWidePerDay'] : ($insurancePlan === 'standard' ? (int)$rates['insurancePerDay'] : 0);
+        $total = $basePrice + ($insuranceRate * $optionUnits) + ($childSeats * (int)$rates['childSeatPerDay'] * $optionUnits) + $serviceTotal;
         $token = bin2hex(random_bytes(18));
         $now = date('Y-m-d H:i:s');
         $code = 'KMC-' . date('ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
@@ -109,18 +113,18 @@ try {
                 json_response(['ok' => false, 'message' => '申し訳ありません。選択中に満車となりました。別の車両をお選びください。'], 409);
             }
             $stmt = $pdo->prepare('INSERT INTO bookings (
-                code, access_token_hash, status, car_class, start_date, end_date, start_time, end_time, billing_mode, start_at, end_at, pickup_location, people, insurance,
+                code, access_token_hash, status, car_class, start_date, end_date, start_time, end_time, billing_mode, start_at, end_at, pickup_location, people, insurance, insurance_plan,
                 child_seats, additional_services, payment_method, name, email, phone, arrival, notes, language,
                 base_price, total, created_at, updated_at
             ) VALUES (
-                :code, :token, "pending", :car, :start, :end, :start_time, :end_time, :billing_mode, :start_at, :end_at, :pickup, :people, :insurance,
+                :code, :token, "pending", :car, :start, :end, :start_time, :end_time, :billing_mode, :start_at, :end_at, :pickup, :people, :insurance, :insurance_plan,
                 :seats, :extras, "onsite", :name, :email, :phone, :arrival, :notes, :language,
                 :base_price, :total, :created, :updated
             )');
             $stmt->execute([
                 ':code' => $code, ':token' => hash('sha256', $token), ':car' => $carClass, ':start' => $start, ':end' => $end,
                 ':start_time' => $startTime, ':end_time' => $endTime, ':billing_mode' => $billingMode, ':start_at' => $startAt, ':end_at' => $endAt,
-                ':pickup' => clean_text($body['pickupLocation'] ?? '', 80), ':people' => $people, ':insurance' => $insurance,
+                ':pickup' => clean_text($body['pickupLocation'] ?? '', 80), ':people' => $people, ':insurance' => $insurance, ':insurance_plan' => $insurancePlan,
                 ':seats' => $childSeats, ':extras' => json_encode($extras, JSON_UNESCAPED_UNICODE), ':name' => $name, ':email' => $email,
                 ':phone' => $phone, ':arrival' => clean_text($body['arrival'] ?? '', 120), ':notes' => clean_text($body['notes'] ?? '', 1000),
                 ':language' => ($body['language'] ?? 'ja') === 'en' ? 'en' : 'ja', ':base_price' => $basePrice, ':total' => $total,
