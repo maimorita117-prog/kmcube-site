@@ -27,7 +27,8 @@ function store_vehicle_image(array $file, string $vehicleId): ?string
 }
 function remove_uploaded_vehicle_image(string $path): void
 {
-    if (!str_starts_with($path, '/api/uploads/vehicles/')) return;
+    $uploadPrefix = '/api/uploads/vehicles/';
+    if (strncmp($path, $uploadPrefix, strlen($uploadPrefix)) !== 0) return;
     $file = dirname(__DIR__) . '/uploads/vehicles/' . basename($path);
     if (is_file($file)) @unlink($file);
 }
@@ -71,7 +72,7 @@ if (logged_in() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['vehicl
                 $message=$action==='add'?'車両と写真を登録し、本サイトへ反映しました。':'車両情報と写真を更新し、本サイトへ反映しました。';
             } catch (Throwable $exception) {
                 if (!empty($uploadedImage)) remove_uploaded_vehicle_image((string)$uploadedImage);
-                $error=str_contains($exception->getMessage(),'UNIQUE')?'同じ車両IDが登録されています。別のIDにしてください。':($exception instanceof RuntimeException?$exception->getMessage():'車両情報を保存できませんでした。');
+                $error=strpos($exception->getMessage(),'UNIQUE')!==false?'同じ車両IDが登録されています。別のIDにしてください。':($exception instanceof RuntimeException?$exception->getMessage():'車両情報を保存できませんでした。');
             }
         }
     }
