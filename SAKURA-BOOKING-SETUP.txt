@@ -6,8 +6,9 @@ KMCUBE 予約システム／さくらサーバー設定
    api/config.local.php、api/storage/kmcube-bookings.sqlite、api/uploads/vehicles の登録画像は削除しません。
 
 2. api/config.sample.php を複製して api/config.local.php を作成します。
-   config.local.php を開き、次の3項目を必ず変更します。
+   config.local.php を開き、次の4項目を必ず変更します。
    shop_email      予約通知を受け取るメールアドレス（m-morita@nn-cube.com）
+   admin_notification_email  管理者通知専用アドレス（m-morita@nn-cube.com）
    mail_from       k-mcube.com ドメインで作成した送信元メールアドレス
    admin_password  管理画面専用の十分に長いパスワード
 
