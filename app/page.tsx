@@ -3,8 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ArrowDown, ArrowRight, BedDouble, CarFront, Check,
-  Coffee, ExternalLink, Footprints, Globe2, Heart, Kayak, MapPin,
-  MessageCircleHeart, ShieldCheck, Waves,
+  Coffee, ExternalLink, Globe2, MapPin, ShieldCheck,
 } from 'lucide-react';
 import { ReservationSystem } from './reservation-system';
 
@@ -40,7 +39,7 @@ const translations = {
     metaTitle: 'KMCUBE｜屋久島の旅をひとつに',
     metaDescription: 'レンタカー、民泊、登山、アクティビティ、漁船遊覧を組み合わせて、あなたらしい屋久島の旅をつなぐKMCUBEの公式サイト。',
     homeLabel: 'KMCUBE ホーム', navLabel: 'メインナビゲーション', switchLabel: 'Switch to English',
-    nav: ['旅のサービス', '旅のかたち', '私たちについて', '会社案内'], navBooking: 'レンタカー予約', navBookingShort: '予約',
+    nav: ['旅のサービス', '旅のかたち', '会社案内'], navBooking: 'レンタカー予約', navBookingShort: '予約',
     driveCaption: 'ゆっくり安全運転中',
     eyebrow: '屋久島の旅を、ひとつにつなぐ', heroLine1: 'めぐる。', heroLine2: 'くつろぐ。', heroLine3: '屋久島を好きになる。',
     heroPhotoAlt: '青い海に囲まれ、深い森と霧をまとう山々が連なる屋久島を上空から望む風景',
@@ -61,15 +60,6 @@ const translations = {
       { title: 'カフェでひと息', note: '深呼吸したくなる休憩' },
       { title: '民泊でくつろぐ', note: '島の夜をゆっくり味わう' },
     ],
-    futureTitle1: 'もっと深く、', futureTitle2: '屋久島と出会う。', futureCopy: 'これから、自然を安心して楽しむための体験案内も少しずつ。島での一日が、もっと豊かにつながっていきます。',
-    hikeTitle: '登山案内', hikeCopy: '森の歩き方やコース選びを、旅程に合わせてご案内する計画です。', kayakTitle: 'カヤック案内', kayakCopy: '水の上から島の自然を味わう、小さな冒険を準備していきます。',
-    aboutNote1: '旅の前から、', aboutNote2: 'おかえりまで。', aboutTitle1: '屋久島を楽しむ人に、', aboutTitle2: '近くて頼れる存在でありたい。',
-    aboutCopy: 'KMCUBEは、屋久島で観光事業を始める会社です。まずはレンタカー、簡易カフェ、民泊から。島を訪れる方が迷わず、安心して、自分らしい旅を楽しめるように、サービス同士をやさしくつないでいきます。',
-    promises: [
-      { title: '分かりやすく', copy: '旅の情報と予約をひとつに' },
-      { title: '相談しやすく', copy: '顔の見える温かなご案内' },
-      { title: '島を大切に', copy: '自然への敬意を忘れない' },
-    ],
     companyTitle: '会社案内', companyIntro: '小さく始めて、屋久島の旅に必要なものを丁寧に育てていきます。',
     companyNameLabel: '会社名', companyName: 'ケーエムキューブ（KMCUBE）', businessLabel: '事業内容', business: '屋久島における観光事業', businessDetail: 'レンタカー・民泊・登山案内・アクティビティ・漁船遊覧（計画中を含む）', futureLabel: '今後の展開', futureBusiness: '登山案内・カヤック等の自然体験・漁船遊覧', affiliateLabel: '関連会社', affiliate: 'キューブ株式会社',
     trustTitle: '安心して使える予約体験へ', trustCopy: 'システム開発を基盤とするキューブ株式会社の関連会社として、その知見も活かしながら、分かりやすく使いやすい予約サービスを目指します。',
@@ -80,7 +70,7 @@ const translations = {
     metaTitle: 'KMCUBE | Your Yakushima Journey, All in One Place',
     metaDescription: 'KMCUBE connects rental cars, stays, hiking, nature activities, and fishing boat cruises for a personal journey around Yakushima.',
     homeLabel: 'KMCUBE home', navLabel: 'Main navigation', switchLabel: '日本語に切り替える',
-    nav: ['Services', 'Your island day', 'About us', 'Company'], navBooking: 'Book a rental car', navBookingShort: 'Book',
+    nav: ['Services', 'Your island day', 'Company'], navBooking: 'Book a rental car', navBookingShort: 'Book',
     driveCaption: 'Enjoying a safe, easy drive',
     eyebrow: 'Connecting every part of your Yakushima trip', heroLine1: 'Roam.', heroLine2: 'Unwind.', heroLine3: 'Fall in love with Yakushima.',
     heroPhotoAlt: 'An aerial view of Yakushima rising from the blue ocean, covered in deep forest and misty mountain ridges',
@@ -100,15 +90,6 @@ const translations = {
       { title: 'Pick up your car', note: 'Your island journey begins' },
       { title: 'Take a café break', note: 'Pause, relax, and breathe' },
       { title: 'Unwind at your stay', note: 'Enjoy a quiet island evening' },
-    ],
-    futureTitle1: 'Meet Yakushima', futureTitle2: 'on a deeper level.', futureCopy: 'We are gradually preparing guided experiences that help visitors enjoy the island’s nature with care and confidence.',
-    hikeTitle: 'Hiking guidance', hikeCopy: 'We plan to help guests choose forest routes and walking styles that fit their itinerary.', kayakTitle: 'Kayak guidance', kayakCopy: 'A small adventure that lets you experience Yakushima’s nature from the water is also in the works.',
-    aboutNote1: 'From before your trip', aboutNote2: 'until welcome home.', aboutTitle1: 'A friendly, reliable partner', aboutTitle2: 'for everyone who enjoys Yakushima.',
-    aboutCopy: 'KMCUBE is a travel company beginning its journey on Yakushima with rental cars, a small café, and guesthouse stays. We gently connect these services so visitors can travel with confidence and enjoy the island in their own way.',
-    promises: [
-      { title: 'Simple', copy: 'Travel information and booking in one place' },
-      { title: 'Approachable', copy: 'Warm guidance from people you can talk to' },
-      { title: 'Island-minded', copy: 'Respect for Yakushima’s natural environment' },
     ],
     companyTitle: 'Company', companyIntro: 'Starting small and carefully growing the services a Yakushima journey needs.',
     companyNameLabel: 'Company', companyName: 'KMCUBE', businessLabel: 'Business', business: 'Tourism services on Yakushima', businessDetail: 'Rental cars, stays, hiking, activities, and fishing boat cruises (including planned services)', futureLabel: 'Future plans', futureBusiness: 'Hiking, kayaking and other nature activities, plus fishing boat cruises', affiliateLabel: 'Affiliated company', affiliate: 'Cube Inc.',
@@ -268,8 +249,7 @@ export default function Home() {
         <nav aria-label={t.navLabel}>
           <a href="#services">{t.nav[0]}</a>
           <a href="#story">{t.nav[1]}</a>
-          <a href="#about">{t.nav[2]}</a>
-          <a href="#company">{t.nav[3]}</a>
+          <a href="#company">{t.nav[2]}</a>
         </nav>
         <div className="header-actions">
           <button className="language-toggle" type="button" onClick={switchLanguage} aria-label={t.switchLabel}>
@@ -333,34 +313,6 @@ export default function Home() {
           <li><span>14:30</span><div><Coffee aria-hidden="true" /><b>{t.route[1].title}</b><small>{t.route[1].note}</small></div></li>
           <li><span>18:00</span><div><BedDouble aria-hidden="true" /><b>{t.route[2].title}</b><small>{t.route[2].note}</small></div></li>
         </ol>
-      </section>
-
-      <section className="section future">
-        <div className="future-intro">
-          <span className="mini-label">NEXT ADVENTURE</span>
-          <h2>{t.futureTitle1}<br />{t.futureTitle2}</h2>
-          <p>{t.futureCopy}</p>
-        </div>
-        <article className="future-card hike">
-          <div className="future-icon"><Footprints aria-hidden="true" /></div><span>PLANNING</span><h3>{t.hikeTitle}</h3><p>{t.hikeCopy}</p>
-        </article>
-        <article className="future-card kayak">
-          <div className="future-icon"><Kayak aria-hidden="true" /></div><span>PLANNING</span><h3>{t.kayakTitle}</h3><p>{t.kayakCopy}</p>
-        </article>
-      </section>
-
-      <section className="about" id="about">
-        <div className="about-note"><Heart aria-hidden="true" /><p>{t.aboutNote1}<br /><strong>{t.aboutNote2}</strong></p></div>
-        <div className="about-copy">
-          <p className="section-kicker">ABOUT KMCUBE</p>
-          <h2>{t.aboutTitle1}<br />{t.aboutTitle2}</h2>
-          <p>{t.aboutCopy}</p>
-          <div className="promise-grid">
-            <div><ShieldCheck aria-hidden="true" /><b>{t.promises[0].title}</b><span>{t.promises[0].copy}</span></div>
-            <div><MessageCircleHeart aria-hidden="true" /><b>{t.promises[1].title}</b><span>{t.promises[1].copy}</span></div>
-            <div><Waves aria-hidden="true" /><b>{t.promises[2].title}</b><span>{t.promises[2].copy}</span></div>
-          </div>
-        </div>
       </section>
 
       <section className="company-section" id="company">

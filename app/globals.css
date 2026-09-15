@@ -83,8 +83,6 @@ html[lang="en"] .eyebrow { letter-spacing: .08em; }
 .hero-photo-caption span { font-family: Arial, sans-serif; font-size: .58rem; font-weight: 900; letter-spacing: .19em; }
 .hero-photo-caption strong { font-family: Arial, sans-serif; font-size: .88rem; letter-spacing: .08em; }
 html[lang="en"] .service-copy { min-height: 108px; }
-html[lang="en"] .about-note p { padding: 0 28px; font-size: 1.15rem; }
-html[lang="en"] .about-note strong { font-size: 1.55rem; }
 .journey-card { position: relative; min-height: 460px; overflow: hidden; padding: 52px 42px; color: #fffdf5; background: var(--primary); border-radius: 42% 58% 44% 56% / 36% 41% 59% 64%; transform: rotate(1.5deg); box-shadow: 24px 30px 0 #dce7ca; }
 .journey-card::before, .journey-card::after { content: ''; position: absolute; border: 1px solid rgba(255,255,255,.15); border-radius: 50%; }
 .journey-card::before { width: 310px; height: 310px; right: -130px; top: -75px; }
@@ -167,7 +165,7 @@ html[lang="en"] .about-note strong { font-size: 1.55rem; }
 .section-heading { display: grid; grid-template-columns: 1fr .78fr; gap: 90px; align-items: end; margin-bottom: 54px; }
 .section-kicker { margin: 0 0 18px; color: var(--accent); font-family: Arial, sans-serif; font-size: .72rem; font-weight: 900; letter-spacing: .2em; }
 .section-kicker.light { color: #f8cd51; }
-.section-heading h2, .future-intro h2, .about-copy h2, .company-title h2, .closing h2, .journey-copy h2 { margin: 0; font-size: clamp(2.35rem, 4.2vw, 4rem); line-height: 1.28; letter-spacing: -.05em; }
+.section-heading h2, .company-title h2, .closing h2, .journey-copy h2 { margin: 0; font-size: clamp(2.35rem, 4.2vw, 4rem); line-height: 1.28; letter-spacing: -.05em; }
 .section-heading > p { margin: 0; color: #536f65; font-size: 1rem; line-height: 2; }
 .service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
 .service-card { position: relative; overflow: hidden; min-height: 455px; padding: 28px 28px 26px; border: 1px solid #cbd7bd; border-radius: 31px 31px 64px 31px; }
@@ -201,30 +199,6 @@ html[lang="en"] .about-note strong { font-size: 1.55rem; }
 .day-route svg { grid-row: 1 / 3; width: 28px; height: 28px; color: #f8cd51; }
 .day-route b { font-size: .96rem; }
 .day-route small { color: #aac8bf; font-size: .72rem; margin-top: 4px; }
-
-.future { display: grid; grid-template-columns: 1.05fr .8fr .8fr; gap: 24px; align-items: stretch; }
-.future-intro { padding: 28px 50px 28px 0; }
-.mini-label { display: inline-block; margin-bottom: 22px; padding: 7px 11px; color: #fff; background: var(--accent); border-radius: 999px; font-family: Arial, sans-serif; font-size: .62rem; font-weight: 900; letter-spacing: .13em; }
-.future-intro > p { color: #536f65; line-height: 1.9; }
-.future-card { min-height: 380px; padding: 30px; color: #fff; background: #286654; border-radius: 80px 28px 28px 28px; }
-.future-card.kayak { color: #183f35; background: #8fc8c0; border-radius: 28px 28px 80px 28px; transform: translateY(35px); }
-.future-icon { display: grid; place-items: center; width: 92px; height: 92px; margin-bottom: 62px; color: #183f35; background: #f8cd51; border-radius: 50%; }
-.future-icon svg { width: 42px; height: 42px; stroke-width: 1.5; }
-.future-card > span { font-family: Arial, sans-serif; font-size: .61rem; font-weight: 900; letter-spacing: .17em; opacity: .66; }
-.future-card h3 { margin: 8px 0 15px; font-size: 1.65rem; }
-.future-card p { margin: 0; font-size: .87rem; line-height: 1.8; }
-
-.about { position: relative; display: grid; grid-template-columns: .7fr 1.3fr; gap: clamp(70px, 10vw, 150px); align-items: center; padding: 145px max(20px, calc((100vw - 1050px)/2)); background: #ecf0e3; }
-.about-note { display: grid; place-items: center; min-height: 350px; color: #fff; background: #ef755c; border-radius: 56% 44% 51% 49% / 47% 57% 43% 53%; transform: rotate(-4deg); }
-.about-note svg { width: 48px; height: 48px; margin-bottom: -70px; fill: rgba(255,255,255,.12); }
-.about-note p { font-size: 1.35rem; line-height: 1.7; text-align: center; }
-.about-note strong { font-size: 1.9rem; }
-.about-copy > p:not(.section-kicker) { color: #506c62; line-height: 2.05; }
-.promise-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 34px; }
-.promise-grid > div { display: grid; gap: 8px; padding: 19px; background: #fffdf6; border-radius: 17px; }
-.promise-grid svg { width: 23px; color: var(--accent); }
-.promise-grid b { font-size: .88rem; }
-.promise-grid span { color: #698077; font-size: .71rem; line-height: 1.6; }
 
 .company-section { display: grid; grid-template-columns: .78fr 1.12fr; column-gap: 90px; row-gap: 45px; padding: 130px max(20px, calc((100vw - 1100px)/2)); color: #fff; background: #173f35; }
 .company-title > p:last-child { color: #b8d0c7; line-height: 1.9; }
@@ -429,10 +403,6 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .service-grid { grid-template-columns: repeat(2, 1fr); }
   .service-card:last-child { grid-column: 1 / -1; }
   .journey-section { grid-template-columns: 1fr; gap: 65px; padding-top: 100px; padding-bottom: 100px; }
-  .future { grid-template-columns: 1fr 1fr; }
-  .future-intro { grid-column: 1 / -1; max-width: 650px; }
-  .about { grid-template-columns: 1fr; padding-top: 100px; padding-bottom: 100px; }
-  .about-note { width: min(410px, 90%); min-height: 310px; margin: 0 auto; }
   .company-section { grid-template-columns: 1fr; padding-top: 100px; padding-bottom: 100px; }
   .company-trust { grid-column: auto; }
   .reservation-heading { grid-template-columns: 1fr; gap: 18px; }
@@ -482,7 +452,7 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .booking-dialog { padding: 23px !important; }
   .booking-summary div { grid-template-columns: 1fr; gap: 5px; }
   .section { width: min(100% - 28px, 1180px); padding: 88px 0; }
-  .section-heading h2, .future-intro h2, .about-copy h2, .company-title h2, .closing h2, .journey-copy h2 { font-size: 2.35rem; }
+  .section-heading h2, .company-title h2, .closing h2, .journey-copy h2 { font-size: 2.35rem; }
   .service-grid { grid-template-columns: 1fr; }
   .service-card, .service-card:last-child { grid-column: auto; min-height: 400px; }
   .journey-section { padding: 88px 20px; }
@@ -490,12 +460,6 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .day-route li > span { width: 54px; height: 54px; border-width: 5px; }
   .day-route::before { left: 26px; }
   .day-route li > div { padding: 18px 15px; }
-  .future { grid-template-columns: 1fr; }
-  .future-intro { grid-column: auto; padding-right: 0; }
-  .future-card.kayak { transform: none; }
-  .about { gap: 70px; padding: 85px 20px; }
-  .about-note { width: 88%; min-height: 275px; }
-  .promise-grid { grid-template-columns: 1fr; }
   .company-section { gap: 48px; padding: 85px 20px; }
   .company-list > div { grid-template-columns: 1fr; gap: 8px; }
   .company-trust { grid-template-columns: 1fr; }
