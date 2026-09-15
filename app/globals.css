@@ -207,6 +207,10 @@ html[lang="en"] .service-copy { min-height: 108px; }
 .company-list dt { color: #a8c0b7; font-size: .75rem; font-weight: 800; }
 .company-list dd { margin: 0; line-height: 1.7; font-weight: 750; }
 .company-list dd span { color: #b8d0c7; font-size: .83rem; font-weight: 500; }
+.company-business-detail { color: #d6e5df; font-size: .86rem; font-weight: 650; }
+.officer-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.officer-list li { display: grid; grid-template-columns: 120px 1fr; gap: 14px; align-items: baseline; }
+.officer-list b { font-size: .92rem; }
 .company-list a { display: inline-flex; align-items: center; gap: 7px; color: #f8cd51; border-bottom: 1px solid #f8cd51; }
 .company-list a svg { width: 15px; }
 .company-trust { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center; padding: 24px 28px; color: #274b41; background: #f7f0d9; border-radius: 22px; }
@@ -467,6 +471,7 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .day-route li > div { padding: 18px 15px; }
   .company-section { gap: 48px; padding: 85px 20px; }
   .company-list > div { grid-template-columns: 1fr; gap: 8px; }
+  .officer-list li { grid-template-columns: 108px 1fr; }
   .company-trust { grid-template-columns: 1fr; }
   .reservation-system { width: min(100% - 28px, 1220px); margin-top: -48px; padding: 27px 19px; border-radius: 26px 26px 44px 26px; }
   .reservation-heading h2 { font-size: 2.2rem; }

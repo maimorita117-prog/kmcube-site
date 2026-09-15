@@ -61,7 +61,7 @@ const translations = {
       { title: '民泊でくつろぐ', note: '島の夜をゆっくり味わう' },
     ],
     companyTitle: '会社案内', companyIntro: '小さく始めて、屋久島の旅に必要なものを丁寧に育てていきます。',
-    companyNameLabel: '会社名', companyName: 'ケーエムキューブ（KMCUBE）', businessLabel: '事業内容', business: '屋久島における観光事業', businessDetail: 'レンタカー・民泊・登山案内・アクティビティ・漁船遊覧（計画中を含む）', futureLabel: '今後の展開', futureBusiness: '登山案内・カヤック等の自然体験・漁船遊覧', affiliateLabel: '関連会社', affiliate: 'キューブ株式会社',
+    companyNameLabel: '会社名', companyName: 'ケーエムキューブ株式会社（KMCUBE株式会社）', establishedLabel: '設立日', establishedDate: '2026年9月1日', capitalLabel: '資本金', capital: '1,000万円', officersLabel: '役員', representativeDirector: '代表取締役', director: '取締役', officers: ['西 久男', '森田 舞', '鞆 亜由美', '中川 武'], businessLabel: '事業内容', business: '屋久島における観光事業', businessDetail: 'レンタカー・民泊・登山案内・アクティビティ・漁船遊覧（計画中を含む）', affiliateLabel: '関連会社', affiliate: 'キューブ株式会社',
     trustTitle: '安心して使える予約体験へ', trustCopy: 'システム開発を基盤とするキューブ株式会社の関連会社として、その知見も活かしながら、分かりやすく使いやすい予約サービスを目指します。',
     closingTitle1: '屋久島で、', closingTitle2: 'お待ちしています。', closingCopy: 'まずはレンタカーから。あなたの旅程に合う一台を一緒に考えます。',
     footerTagline: '屋久島の旅を、ひとつにつなぐ。', footerLinks: ['事業案内', '会社案内', '関連会社'],
@@ -92,7 +92,7 @@ const translations = {
       { title: 'Unwind at your stay', note: 'Enjoy a quiet island evening' },
     ],
     companyTitle: 'Company', companyIntro: 'Starting small and carefully growing the services a Yakushima journey needs.',
-    companyNameLabel: 'Company', companyName: 'KMCUBE', businessLabel: 'Business', business: 'Tourism services on Yakushima', businessDetail: 'Rental cars, stays, hiking, activities, and fishing boat cruises (including planned services)', futureLabel: 'Future plans', futureBusiness: 'Hiking, kayaking and other nature activities, plus fishing boat cruises', affiliateLabel: 'Affiliated company', affiliate: 'Cube Inc.',
+    companyNameLabel: 'Company', companyName: 'KMCUBE Co., Ltd.（KMCUBE株式会社）', establishedLabel: 'Established', establishedDate: 'September 1, 2026', capitalLabel: 'Capital', capital: 'JPY 10 million', officersLabel: 'Directors', representativeDirector: 'Representative Director', director: 'Director', officers: ['西 久男', '森田 舞', '鞆 亜由美', '中川 武'], businessLabel: 'Business', business: 'Tourism services on Yakushima', businessDetail: 'Rental cars, stays, hiking, activities, and fishing boat cruises (including planned services)', affiliateLabel: 'Affiliated company', affiliate: 'Cube Inc.',
     trustTitle: 'Building a booking experience you can trust', trustCopy: 'As an affiliate of Cube Inc., a company grounded in software development, we aim to use that expertise to create a clear and easy-to-use booking service.',
     closingTitle1: 'We look forward to', closingTitle2: 'welcoming you to Yakushima.', closingCopy: 'We are starting with rental cars and will help you choose one that fits your itinerary.',
     footerTagline: 'Connecting every part of your Yakushima journey.', footerLinks: ['Services', 'Company', 'Affiliate'],
@@ -322,8 +322,10 @@ export default function Home() {
         <div className="company-title"><p className="section-kicker light">COMPANY</p><h2>{t.companyTitle}</h2><p>{t.companyIntro}</p></div>
         <dl className="company-list">
           <div><dt>{t.companyNameLabel}</dt><dd>{t.companyName}</dd></div>
-          <div><dt>{t.businessLabel}</dt><dd>{t.business}<br /><span>{t.businessDetail}</span></dd></div>
-          <div><dt>{t.futureLabel}</dt><dd>{t.futureBusiness}</dd></div>
+          <div><dt>{t.establishedLabel}</dt><dd>{t.establishedDate}</dd></div>
+          <div><dt>{t.capitalLabel}</dt><dd>{t.capital}</dd></div>
+          <div><dt>{t.officersLabel}</dt><dd><ul className="officer-list">{t.officers.map((officer, index) => <li key={officer}><span>{index === 0 ? t.representativeDirector : t.director}</span><b>{officer}</b></li>)}</ul></dd></div>
+          <div><dt>{t.businessLabel}</dt><dd>{t.business}<br /><strong className="company-business-detail">{t.businessDetail}</strong></dd></div>
           <div><dt>{t.affiliateLabel}</dt><dd><a href="https://nn-cube.com" target="_blank" rel="noreferrer">{t.affiliate} <ExternalLink aria-hidden="true" /></a></dd></div>
         </dl>
         <div className="company-trust">
