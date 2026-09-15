@@ -29,13 +29,13 @@ const carDefaults: Availability[] = [
 
 const copy = {
   ja: {
-    kicker: 'BOOKING & PRICE', title: '空き情報から予約までノンストップ！',
+    kicker: 'BOOKING & PRICE', title: '予約検索',
     intro: '日程を入力すると、空いている車両と概算料金を確認できます。民泊や体験の相談も同時に送れます。',
     bookTab: '新しく予約する', manageTab: '予約の照会・変更', hourly: '時間制', daily: '日数制', hourlyNote: '1～24時間。日額を上限に計算', dailyNote: '24時間単位で計算', start: '出発日', end: '返却日', startTime: '出発時刻', endTime: '返却時刻', pickup: '受取・返却場所', people: '利用人数',
     search: '空車と料金を確認', searching: '確認中…', choose: '車両クラスを選択', available: '空車', unavailable: '満車', perDay: '1日・税込',
     options: '補償・オプション', insurance: '安心補償パック', insuranceNote: '休業補償などをカバー（仮）', childSeat: 'チャイルドシート',
     services: '一緒に相談するサービス', servicesIntro: '気になる体験をタップすると概算料金にすぐ反映されます。複数選択できます。', stay: '民泊', stayNote: '島で暮らすように泊まる、素泊まりプラン', hike: '登山案内', hikeNote: '初心者も安心。半日ガイドの目安', activity: 'アクティビティ', activityNote: 'カヤックなど自然体験1メニュー', boat: '漁船遊覧', boatNote: '屋久島の海を楽しむ約2時間コース', provisional: '参考料金・税込', selectService: '選択する', selectedService: '選択中', perPersonNight: '1名・1泊', perPersonUse: '1名・1回',
-    customer: 'お客様情報', name: 'お名前', email: 'メールアドレス', phone: '電話番号', arrival: '到着便・船便（任意）', notes: 'ご要望（任意）',
+    customer: 'お客様情報', name: 'お名前', email: 'メールアドレス', phone: '電話番号', requiredLabel: '必須', arrival: '到着便・船便（任意）', notes: 'ご要望（任意）',
     payment: 'お支払い方法', onsite: '現地払い', online: 'オンライン決済', onlineSoon: '決済会社接続後に利用可能',
     agree: '料金・キャンセル規定、利用規約、個人情報保護方針に同意します。', submit: 'この内容で予約する', submitting: '予約を登録中…',
     summary: '予約内容・概算料金', days: '日', hours: '時間', base: '車両基本料金', insurancePrice: '安心補償', childPrice: 'チャイルドシート', total: '概算合計',
@@ -50,13 +50,13 @@ const copy = {
     privacyTitle: '個人情報保護方針', privacyText: '取得した氏名、連絡先、旅程情報は、予約管理、本人確認、ご連絡、事故対応のために利用します。法令に基づく場合を除き、本人の同意なく第三者へ提供しません。',
   },
   en: {
-    kicker: 'BOOKING & PRICE', title: 'From availability to booking—nonstop!',
+    kicker: 'BOOKING & PRICE', title: 'Booking search',
     intro: 'Enter your dates to see available vehicles and an estimated price. You can also request accommodation and activities.',
     bookTab: 'New booking', manageTab: 'Manage booking', hourly: 'Hourly', daily: 'Daily', hourlyNote: '1–24 hours, capped at the daily rate', dailyNote: 'Calculated in 24-hour units', start: 'Pick-up date', end: 'Return date', startTime: 'Pick-up time', endTime: 'Return time', pickup: 'Pick-up / return location', people: 'Travelers',
     search: 'Check availability', searching: 'Checking…', choose: 'Choose a vehicle class', available: 'available', unavailable: 'Full', perDay: 'per day, tax included',
     options: 'Coverage & options', insurance: 'Peace-of-mind coverage', insuranceNote: 'Includes loss-of-use coverage (provisional)', childSeat: 'Child seat',
     services: 'Services to request together', servicesIntro: 'Tap any experience to add its estimated price. You can select more than one.', stay: 'Guesthouse', stayNote: 'Simple room-only island stay', hike: 'Hiking guide', hikeNote: 'Estimated half-day beginner-friendly guide', activity: 'Activities', activityNote: 'One nature experience such as kayaking', boat: 'Boat cruise', boatNote: 'Approx. two-hour cruise around Yakushima', provisional: 'Estimated, tax included', selectService: 'Select', selectedService: 'Selected', perPersonNight: 'per guest / night', perPersonUse: 'per guest / activity',
-    customer: 'Guest details', name: 'Name', email: 'Email', phone: 'Phone', arrival: 'Flight or ferry (optional)', notes: 'Requests (optional)',
+    customer: 'Guest details', name: 'Name', email: 'Email', phone: 'Phone', requiredLabel: 'Required', arrival: 'Flight or ferry (optional)', notes: 'Requests (optional)',
     payment: 'Payment', onsite: 'Pay on arrival', online: 'Online payment', onlineSoon: 'Available after payment setup',
     agree: 'I agree to the rates, cancellation policy, terms, and privacy policy.', submit: 'Send booking request', submitting: 'Submitting…',
     summary: 'Booking summary', days: 'day(s)', hours: 'hour(s)', base: 'Vehicle', insurancePrice: 'Coverage', childPrice: 'Child seat', total: 'Estimated total',
@@ -302,7 +302,7 @@ export function ReservationSystem({ language }: { language: Language }) {
                 })}</div>
               </div>
               <div className="booking-step"><div className="booking-step-title"><span>04</span><h3>{t.customer}</h3></div>
-                <div className="customer-grid"><label>{t.name}<input name="name" required /></label><label>{t.email}<input name="email" type="email" required /></label><label>{t.phone}<input name="phone" type="tel" required /></label><label>{t.arrival}<input name="arrival" /></label><label className="wide">{t.notes}<textarea name="notes" rows={3} /></label></div>
+                <div className="customer-grid"><label><span className="field-label">{t.name}<em className="field-required">{t.requiredLabel}</em></span><input name="name" required /></label><label><span className="field-label">{t.email}<em className="field-required">{t.requiredLabel}</em></span><input name="email" type="email" required /></label><label><span className="field-label">{t.phone}<em className="field-required">{t.requiredLabel}</em></span><input name="phone" type="tel" required /></label><label>{t.arrival}<input name="arrival" /></label><label className="wide">{t.notes}<textarea name="notes" rows={3} /></label></div>
               </div>
             </div>
             <aside className="reservation-summary">

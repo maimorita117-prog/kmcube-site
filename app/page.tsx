@@ -260,7 +260,10 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
-        <img className="hero-photo" src="./hero-yakushima-aerial-v3.jpg" alt={t.heroPhotoAlt} width="1536" height="1024" fetchPriority="high" />
+        <picture>
+          <source media="(max-width: 620px)" srcSet="./hero-yakushima-mobile-v1.webp" />
+          <img className="hero-photo" src="./hero-yakushima-aerial-v3.jpg" alt={t.heroPhotoAlt} width="1536" height="1024" fetchPriority="high" />
+        </picture>
         <div className="hero-photo-shade" aria-hidden="true" />
         <div className="hero-copy">
           <p className="eyebrow"><MapPin aria-hidden="true" /> {t.eyebrow}</p>
