@@ -457,8 +457,9 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .booking-summary div { grid-template-columns: 1fr; gap: 5px; }
   .section { width: min(100% - 28px, 1180px); padding: 88px 0; }
   .section-heading h2, .company-title h2, .closing h2, .journey-copy h2 { font-size: 2.35rem; }
-  .service-grid { grid-template-columns: 1fr; }
-  .service-card, .service-card:last-child { grid-column: auto; min-height: 400px; }
+  .service-grid { display: flex; gap: 14px; overflow-x: auto; padding: 0 0 18px; scroll-padding-inline: 0; scroll-snap-type: x mandatory; overscroll-behavior-inline: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .service-grid::-webkit-scrollbar { display: none; }
+  .service-card, .service-card:last-child { grid-column: auto; flex: 0 0 min(82vw, 330px); min-height: 400px; scroll-snap-align: start; }
   .journey-section { padding: 88px 20px; }
   .day-route li { grid-template-columns: 54px 1fr; gap: 12px; }
   .day-route li > span { width: 54px; height: 54px; border-width: 5px; }

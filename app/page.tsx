@@ -286,7 +286,7 @@ export default function Home() {
           <div><p className="section-kicker">OUR SERVICES</p><h2>{t.servicesTitle1}<br />{t.servicesTitle2}</h2></div>
           <p>{t.servicesIntro}</p>
         </div>
-        <div className="service-grid">
+        <div className="service-grid" aria-label={language === 'ja' ? 'レンタカー、簡易カフェ、民泊のサービス一覧' : 'Rental car, small café, and guesthouse services'}>
           {serviceMeta.map((service, index) => {
             const Icon = service.icon;
             const localized = t.services[index];
