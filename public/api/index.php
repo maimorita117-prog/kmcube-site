@@ -8,7 +8,12 @@ header('X-Frame-Options: SAMEORIGIN');
 
 try {
     $pdo = db();
-    $action = clean_text($_GET['action'] ?? 'health', 30);
+    $action = clean_text($_GET['action'] ?? 'health', 80);
+    // Older cached builds appended the cache-buster as "reserve?_=...".
+    // Normalize that value so bookings, cancellations and changes still work
+    // while visitors' browsers receive the corrected JavaScript bundle.
+    $questionMark = strpos($action, '?');
+    if ($questionMark !== false) $action = substr($action, 0, $questionMark);
 
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') json_response(['ok' => true]);
 

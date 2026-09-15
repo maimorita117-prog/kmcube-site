@@ -2,6 +2,8 @@ KMCUBE 予約システム／さくらサーバー設定
 ========================================
 
 1. ビルド済みフォルダの中身を、k-mcube.com の公開フォルダへ上書きアップロードします。
+   再アップロード時は公開フォルダを削除せず、必ず上書きしてください。
+   api/config.local.php、api/storage/kmcube-bookings.sqlite、api/uploads/vehicles の登録画像は削除しません。
 
 2. api/config.sample.php を複製して api/config.local.php を作成します。
    config.local.php を開き、次の3項目を必ず変更します。
