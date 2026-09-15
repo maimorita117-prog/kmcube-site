@@ -99,7 +99,9 @@ try {
         $code = 'KMC-' . date('ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
 
         try {
-            $pdo->exec('BEGIN IMMEDIATE');
+            // Start the transaction through PDO so PDO::commit()/rollBack()
+            // recognise it correctly on Sakura's PHP 7.4 PDO_SQLITE driver.
+            $pdo->beginTransaction();
             $booked = active_booking_count($pdo, $carClass, $startAt, $endAt);
             $blocked = blocked_vehicle_count($pdo, $carClass, $startAt, $endAt);
             if ($booked + $blocked >= (int)$car['inventory']) {
@@ -133,7 +135,14 @@ try {
         $stmt = $pdo->prepare('SELECT * FROM bookings WHERE id = :id');
         $stmt->execute([':id' => $id]);
         $booking = $stmt->fetch();
-        $mailStatus = send_booking_mail($booking, $token, $config, 'created');
+        $mailStatus = ['customer' => false, 'admin' => false];
+        try {
+            $mailStatus = send_booking_mail($booking, $token, $config, 'created');
+        } catch (Throwable $mailError) {
+            // The booking is already safely stored. A mail transport problem
+            // must not turn the completed reservation into a server error.
+            error_log('[KMCUBE booking mail] ' . $mailError->getMessage());
+        }
         json_response(['ok' => true, 'booking' => public_booking($booking, $pdo), 'accessToken' => $token, 'mailSent' => $mailStatus['customer'], 'adminMailSent' => $mailStatus['admin']], 201);
     }
 
