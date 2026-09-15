@@ -4,7 +4,9 @@ return [
     'shop_name' => 'KMCUBE Yakushima',
     'shop_email' => 'm-morita@nn-cube.com',
     'admin_notification_email' => 'm-morita@nn-cube.com',
+    'mail_from_name' => 'KMCUBE Yakushima',
     'mail_from' => 'no-reply@k-mcube.com',
+    'mail_envelope_from' => 'no-reply@k-mcube.com',
     'admin_password' => 'CHANGE_ME_NOW',
     'base_url' => 'https://k-mcube.com',
     'cars' => [

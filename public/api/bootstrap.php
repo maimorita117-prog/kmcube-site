@@ -124,6 +124,18 @@ function db(): PDO
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_availability_blocks ON availability_blocks(car_class, start_at, end_at)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS request_log (ip_hash TEXT NOT NULL, created_at INTEGER NOT NULL)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_request_log_time ON request_log(created_at)');
+    $pdo->exec('CREATE TABLE IF NOT EXISTS mail_delivery_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        booking_code TEXT NOT NULL DEFAULT "",
+        recipient_type TEXT NOT NULL,
+        recipient TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        accepted INTEGER NOT NULL DEFAULT 0,
+        transport TEXT NOT NULL DEFAULT "php-mail",
+        error_message TEXT NOT NULL DEFAULT "",
+        created_at TEXT NOT NULL
+    )');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_mail_delivery_log_created ON mail_delivery_log(created_at)');
     $pdo->exec('PRAGMA optimize');
     return $pdo;
 }
@@ -293,6 +305,78 @@ function client_rate_limit(PDO $pdo): void
     $stmt->execute([':hash' => $hash, ':time' => $now]);
 }
 
+function mail_config(array $config): array
+{
+    $adminEmail = (string)($config['admin_notification_email'] ?? 'm-morita@nn-cube.com');
+    if (!filter_var($adminEmail, FILTER_VALIDATE_EMAIL) || strpos($adminEmail, 'CHANGE_ME') !== false) $adminEmail = 'm-morita@nn-cube.com';
+    $shopEmail = (string)($config['shop_email'] ?? $adminEmail);
+    if (!filter_var($shopEmail, FILTER_VALIDATE_EMAIL) || strpos($shopEmail, 'CHANGE_ME') !== false) $shopEmail = $adminEmail;
+    $mailFrom = (string)($config['mail_from'] ?? 'no-reply@k-mcube.com');
+    if (!filter_var($mailFrom, FILTER_VALIDATE_EMAIL)) $mailFrom = 'no-reply@k-mcube.com';
+    $envelopeFrom = (string)($config['mail_envelope_from'] ?? $mailFrom);
+    if (!filter_var($envelopeFrom, FILTER_VALIDATE_EMAIL)) $envelopeFrom = $mailFrom;
+    $fromName = preg_replace('/[\r\n]+/', ' ', clean_text($config['mail_from_name'] ?? 'KMCUBE Yakushima', 80)) ?? 'KMCUBE Yakushima';
+    return ['admin' => $adminEmail, 'shop' => $shopEmail, 'from' => $mailFrom, 'envelope' => $envelopeFrom, 'name' => $fromName];
+}
+
+function log_mail_delivery(string $bookingCode, string $recipientType, string $recipient, string $subject, bool $accepted, string $errorMessage = ''): void
+{
+    try {
+        $stmt = db()->prepare('INSERT INTO mail_delivery_log(booking_code, recipient_type, recipient, subject, accepted, transport, error_message, created_at) VALUES(:code,:type,:recipient,:subject,:accepted,"php-mail",:error,:created)');
+        $stmt->execute([
+            ':code' => clean_text($bookingCode, 40), ':type' => clean_text($recipientType, 20),
+            ':recipient' => clean_text($recipient, 180), ':subject' => clean_text($subject, 240),
+            ':accepted' => $accepted ? 1 : 0, ':error' => clean_text($errorMessage, 500), ':created' => date('Y-m-d H:i:s'),
+        ]);
+    } catch (Throwable $logError) {
+        error_log('[KMCUBE mail log] ' . $logError->getMessage());
+    }
+}
+
+function send_text_mail(string $to, string $subject, string $body, array $config, string $replyTo, string $recipientType, string $bookingCode = ''): bool
+{
+    $settings = mail_config($config);
+    if (!filter_var($to, FILTER_VALIDATE_EMAIL) || !filter_var($replyTo, FILTER_VALIDATE_EMAIL)) {
+        log_mail_delivery($bookingCode, $recipientType, $to, $subject, false, '宛先または返信先メールアドレスが不正です。');
+        return false;
+    }
+    if (function_exists('mb_language')) @mb_language('Japanese');
+    if (function_exists('mb_internal_encoding')) @mb_internal_encoding('UTF-8');
+    $encodedName = function_exists('mb_encode_mimeheader') ? mb_encode_mimeheader($settings['name'], 'UTF-8') : $settings['name'];
+    $headers = [
+        'From: ' . $encodedName . ' <' . $settings['from'] . '>',
+        'Sender: ' . $settings['envelope'],
+        'Reply-To: ' . $replyTo,
+        'MIME-Version: 1.0',
+        'Content-Type: text/plain; charset=UTF-8',
+        'Content-Transfer-Encoding: 8bit',
+        'X-Mailer: KMCUBE Booking System',
+    ];
+    $headerText = implode("\r\n", $headers);
+    $envelopeOption = '-f' . $settings['envelope'];
+    $lastErrorBefore = error_get_last();
+    if (function_exists('mb_send_mail')) {
+        $accepted = @mb_send_mail($to, $subject, $body, $headerText, $envelopeOption);
+    } else {
+        $encodedSubject = function_exists('mb_encode_mimeheader') ? mb_encode_mimeheader($subject, 'UTF-8') : $subject;
+        $accepted = @mail($to, $encodedSubject, $body, $headerText, $envelopeOption);
+    }
+    $lastErrorAfter = error_get_last();
+    $errorMessage = '';
+    if (!$accepted && $lastErrorAfter !== $lastErrorBefore && is_array($lastErrorAfter)) $errorMessage = (string)($lastErrorAfter['message'] ?? 'PHPのメール送信処理が失敗しました。');
+    if (!$accepted && $errorMessage === '') $errorMessage = 'PHPのメール送信処理が受け付けられませんでした。';
+    log_mail_delivery($bookingCode, $recipientType, $to, $subject, (bool)$accepted, $errorMessage);
+    return (bool)$accepted;
+}
+
+function send_test_mail(string $to, array $config): bool
+{
+    $settings = mail_config($config);
+    $subject = '【KMCUBE】メール送信テスト ' . date('Y-m-d H:i:s');
+    $body = "KMCUBE予約管理画面からのメール送信テストです。\n\n受信日時: " . date(DATE_ATOM) . "\n差出人: {$settings['from']}\n配送元: {$settings['envelope']}\n\nこのメールを受信できれば、PHPからメールサーバーまでの送信経路は動作しています。";
+    return send_text_mail($to, $subject, $body, $config, $settings['shop'], 'test');
+}
+
 function send_booking_mail(array $booking, string $accessToken, array $config, string $kind = 'created'): array
 {
     $labels = ['created' => '予約受付完了', 'confirmed' => '予約確定', 'cancelled' => '予約キャンセル受付', 'change' => '予約変更リクエスト受付'];
@@ -345,22 +429,9 @@ function send_booking_mail(array $booking, string $accessToken, array $config, s
     $adminMessage .= $changeDetails;
     $adminMessage .= "\n管理画面: {$adminUrl}";
 
-    $adminEmail = (string)($config['admin_notification_email'] ?? 'm-morita@nn-cube.com');
-    if (!filter_var($adminEmail, FILTER_VALIDATE_EMAIL) || strpos($adminEmail, 'CHANGE_ME') !== false) $adminEmail = 'm-morita@nn-cube.com';
-    $shopEmail = (string)($config['shop_email'] ?? $adminEmail);
-    if (!filter_var($shopEmail, FILTER_VALIDATE_EMAIL) || strpos($shopEmail, 'CHANGE_ME') !== false) $shopEmail = $adminEmail;
-    $mailFrom = (string)($config['mail_from'] ?? 'no-reply@k-mcube.com');
-    if (!filter_var($mailFrom, FILTER_VALIDATE_EMAIL)) $mailFrom = 'no-reply@k-mcube.com';
-    if (function_exists('mb_language')) @mb_language('Japanese');
-    if (function_exists('mb_internal_encoding')) @mb_internal_encoding('UTF-8');
-    $send = static function (string $to, string $mailSubject, string $mailBody, array $mailHeaders): bool {
-        if (function_exists('mb_send_mail')) return @mb_send_mail($to, $mailSubject, $mailBody, implode("\r\n", $mailHeaders));
-        $encodedSubject = function_exists('mb_encode_mimeheader') ? mb_encode_mimeheader($mailSubject, 'UTF-8') : $mailSubject;
-        return @mail($to, $encodedSubject, $mailBody, implode("\r\n", $mailHeaders));
-    };
-    $baseHeaders = ['From: ' . $mailFrom, 'MIME-Version: 1.0', 'Content-Type: text/plain; charset=UTF-8'];
-    $sentUser = $send((string)$booking['email'], $subject, $customerMessage, array_merge($baseHeaders, ['Reply-To: ' . $shopEmail]));
+    $settings = mail_config($config);
+    $sentUser = send_text_mail((string)$booking['email'], $subject, $customerMessage, $config, $settings['shop'], 'customer', (string)$booking['code']);
     $adminSubjectLabel = $kind === 'created' ? '新規予約通知' : $eventLabel;
-    $sentAdmin = $send($adminEmail, '【KMCUBE管理】' . $adminSubjectLabel . ' ' . $booking['code'], $adminMessage, array_merge($baseHeaders, ['Reply-To: ' . $booking['email']]));
+    $sentAdmin = send_text_mail($settings['admin'], '【KMCUBE管理】' . $adminSubjectLabel . ' ' . $booking['code'], $adminMessage, $config, (string)$booking['email'], 'admin', (string)$booking['code']);
     return ['customer' => $sentUser, 'admin' => $sentAdmin];
 }
