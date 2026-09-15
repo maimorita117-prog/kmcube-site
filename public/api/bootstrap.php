@@ -168,6 +168,21 @@ function clean_text($value, int $max = 500): string
     return mb_substr($text, 0, $max, 'UTF-8');
 }
 
+function normalize_phone($value): string
+{
+    $phone = clean_text($value, 40);
+    if (function_exists('mb_convert_kana')) $phone = mb_convert_kana($phone, 'n', 'UTF-8');
+    $phone = str_replace(['‐', '‑', '‒', '–', '—', '―', 'ー', '−'], '-', $phone);
+    return preg_replace('/[\s\x{3000}]+/u', ' ', trim($phone)) ?? '';
+}
+
+function valid_phone(string $phone): bool
+{
+    if (!preg_match('/^[+()0-9\s-]+$/', $phone)) return false;
+    $digits = preg_replace('/\D+/', '', $phone) ?? '';
+    return strlen($digits) >= 7 && strlen($digits) <= 15;
+}
+
 function valid_date(string $value): bool
 {
     $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value);

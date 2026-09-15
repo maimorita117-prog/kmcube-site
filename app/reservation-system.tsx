@@ -7,6 +7,7 @@ type Language = 'ja' | 'en';
 type BillingMode = 'hourly' | 'daily';
 type InsurancePlan = 'basic' | 'standard' | 'wide';
 type ExtraServiceId = 'stay' | 'hike' | 'activity' | 'boat';
+type CustomerField = 'name' | 'email' | 'phone';
 type ServicePrices = Record<ExtraServiceId, number>;
 type BookingRates = { insurancePerDay: number; insuranceWidePerDay: number; childSeatPerDay: number; services: ServicePrices };
 type Availability = { id: string; label: string; model: string; imageUrl?: string; price: number; hourlyPrice: number; inventory: number; booked?: number; blocked?: number; available: number };
@@ -41,7 +42,7 @@ const copy = {
     widePlan: '安心保険プラン・ワイド', widePlanDesc: '安心保険プラン＋NOC免除。自損・当て逃げの車両免責も免除（条件あり）', widePlanLimit: '警察・KMCUBEへの届出など、適用条件があります',
     insuranceTermsNote: '現在は参考プランです。正式な補償範囲・適用条件・対象外事項は、保険会社との契約および貸渡約款確定後に更新します。', childSeat: 'チャイルドシート',
     services: '一緒に相談するサービス', servicesIntro: '気になる体験をタップすると概算料金にすぐ反映されます。複数選択できます。', stay: '民泊', stayNote: '島で暮らすように泊まる、素泊まりプラン', hike: '登山案内', hikeNote: '初心者も安心。半日ガイドの目安', activity: 'アクティビティ', activityNote: 'カヤックなど自然体験1メニュー', boat: '漁船遊覧', boatNote: '屋久島の海を楽しむ約2時間コース', provisional: '参考料金・税込', selectService: '選択する', selectedService: '選択中', perPersonNight: '1名・1泊', perPersonUse: '1名・1回',
-    customer: 'お客様情報', name: 'お名前', email: 'メールアドレス', phone: '電話番号', requiredLabel: '必須', arrival: '到着便・船便（任意）', notes: 'ご要望（任意）',
+    customer: 'お客様情報', customerIntro: '入力内容は予約確認のご連絡にのみ使用します。', name: 'お名前', namePlaceholder: '例：屋久島 花子', nameHint: '姓と名を入力してください。', nameError: 'お名前を入力してください。', email: 'メールアドレス', emailPlaceholder: '例：hanako@example.com', emailHint: '予約確認メールを受け取れるアドレスをご入力ください。', emailError: 'メールアドレスの形式をご確認ください。', phone: '電話番号', phonePlaceholder: '例：090-1234-5678', phoneHint: 'ハイフンあり・全角数字でも入力できます。', phoneError: '電話番号は数字7～15桁で入力してください。', requiredLabel: '必須', arrival: '到着便・船便（任意）', arrivalPlaceholder: '例：JAL3743便／高速船 13:10着', arrivalHint: '分かる範囲で入力すると、お迎えのご案内がスムーズです。', notes: 'ご要望（任意）', notesPlaceholder: '送迎や旅程について、ご希望があればご入力ください。', customerFormError: '入力内容をご確認ください。赤く表示された項目を修正すると予約できます。', characters: '文字',
     payment: 'お支払い方法', onsite: '現地払い', online: 'オンライン決済', onlineSoon: '決済会社接続後に利用可能',
     agree: '料金・キャンセル規定、利用規約、個人情報保護方針に同意します。', submit: 'この内容で予約する', submitting: '予約を登録中…',
     summary: '予約内容・概算料金', days: '日', hours: '時間', base: '車両基本料金', insurancePrice: '保険・補償プラン', childPrice: 'チャイルドシート', total: '概算合計',
@@ -66,7 +67,7 @@ const copy = {
     widePlan: 'Peace-of-mind insurance plan Wide', widePlanDesc: 'Adds an NOC waiver and conditional excess waiver for single-vehicle and hit-and-run damage', widePlanLimit: 'Police and KMCUBE reporting and other conditions apply',
     insuranceTermsNote: 'These are provisional reference plans. Final coverage, conditions and exclusions will be updated after the insurer agreement and rental terms are confirmed.', childSeat: 'Child seat',
     services: 'Services to request together', servicesIntro: 'Tap any experience to add its estimated price. You can select more than one.', stay: 'Guesthouse', stayNote: 'Simple room-only island stay', hike: 'Hiking guide', hikeNote: 'Estimated half-day beginner-friendly guide', activity: 'Activities', activityNote: 'One nature experience such as kayaking', boat: 'Boat cruise', boatNote: 'Approx. two-hour cruise around Yakushima', provisional: 'Estimated, tax included', selectService: 'Select', selectedService: 'Selected', perPersonNight: 'per guest / night', perPersonUse: 'per guest / activity',
-    customer: 'Guest details', name: 'Name', email: 'Email', phone: 'Phone', requiredLabel: 'Required', arrival: 'Flight or ferry (optional)', notes: 'Requests (optional)',
+    customer: 'Guest details', customerIntro: 'We only use these details to contact you about your booking.', name: 'Name', namePlaceholder: 'e.g. Hanako Yakushima', nameHint: 'Enter your full name.', nameError: 'Please enter your name.', email: 'Email', emailPlaceholder: 'e.g. hanako@example.com', emailHint: 'Use an address where you can receive your booking email.', emailError: 'Please check the email address format.', phone: 'Phone', phonePlaceholder: 'e.g. +81 90-1234-5678', phoneHint: 'Spaces, hyphens and full-width digits are accepted.', phoneError: 'Enter a phone number containing 7–15 digits.', requiredLabel: 'Required', arrival: 'Flight or ferry (optional)', arrivalPlaceholder: 'e.g. JAL 3743 / High-speed ferry 13:10', arrivalHint: 'This helps us coordinate your pick-up.', notes: 'Requests (optional)', notesPlaceholder: 'Tell us about pick-up or itinerary requests.', customerFormError: 'Please check the highlighted fields before booking.', characters: 'characters',
     payment: 'Payment', onsite: 'Pay on arrival', online: 'Online payment', onlineSoon: 'Available after payment setup',
     agree: 'I agree to the rates, cancellation policy, terms, and privacy policy.', submit: 'Send booking request', submitting: 'Submitting…',
     summary: 'Booking summary', days: 'day(s)', hours: 'hour(s)', base: 'Vehicle', insurancePrice: 'Coverage', childPrice: 'Child seat', total: 'Estimated total',
@@ -84,6 +85,9 @@ const copy = {
 
 const yen = (value: number) => new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY', maximumFractionDigits: 0 }).format(value);
 const today = () => new Date().toISOString().slice(0, 10);
+const normalizeEmail = (value: string) => value.normalize('NFKC').trim();
+const normalizePhone = (value: string) => value.normalize('NFKC').replace(/[‐‑‒–—―ー−]/g, '-').replace(/\s+/g, ' ').trim();
+const phoneDigitCount = (value: string) => (value.match(/\d/g) || []).length;
 const countHours = (startDate: string, startTime: string, endDate: string, endTime: string) => {
   if (!startDate || !endDate || !startTime || !endTime) return 0;
   const value = (new Date(`${endDate}T${endTime}:00`).getTime() - new Date(`${startDate}T${startTime}:00`).getTime()) / 3600000;
@@ -116,6 +120,8 @@ export function ReservationSystem({ language }: { language: Language }) {
   const [apiReady, setApiReady] = useState(true);
   const [insurancePlan, setInsurancePlan] = useState<InsurancePlan>('standard');
   const [childSeats, setChildSeats] = useState(0);
+  const [customerFieldErrors, setCustomerFieldErrors] = useState<Partial<Record<CustomerField, string>>>({});
+  const [notesLength, setNotesLength] = useState(0);
   const [rates, setRates] = useState<BookingRates>(defaultRates);
   const [extras, setExtras] = useState<ExtraServiceId[]>([]);
   const [error, setError] = useState('');
@@ -169,6 +175,23 @@ export function ReservationSystem({ language }: { language: Language }) {
     return { base, coverage, seat, services, servicesTotal, total: base + coverage + seat + servicesTotal };
   }, [currentCar, billingMode, billingUnits, insurancePlan, childSeats, rates, extras, people, hours]);
 
+  function validateCustomerField(field: CustomerField, value: string) {
+    const email = normalizeEmail(value);
+    const phone = normalizePhone(value);
+    const phoneDigits = phoneDigitCount(phone);
+    return {
+      name: value.trim() ? '' : t.nameError,
+      email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? '' : t.emailError,
+      phone: /^[+()\d\s-]+$/.test(phone) && phoneDigits >= 7 && phoneDigits <= 15 ? '' : t.phoneError,
+    }[field];
+  }
+
+  function validateCustomerInput(field: CustomerField, input: HTMLInputElement) {
+    const normalizedValue = field === 'email' ? normalizeEmail(input.value) : field === 'phone' ? normalizePhone(input.value) : input.value.trim().replace(/\s+/g, ' ');
+    input.value = normalizedValue;
+    setCustomerFieldErrors((current) => ({ ...current, [field]: validateCustomerField(field, normalizedValue) }));
+  }
+
   async function searchAvailability(event: React.FormEvent) {
     event.preventDefault();
     setError('');
@@ -198,14 +221,37 @@ export function ReservationSystem({ language }: { language: Language }) {
   async function submitBooking(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedCar) return setError(t.selectCar);
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const normalizedCustomer = {
+      name: String(data.get('name') || '').trim().replace(/\s+/g, ' '),
+      email: normalizeEmail(String(data.get('email') || '')),
+      phone: normalizePhone(String(data.get('phone') || '')),
+      arrival: String(data.get('arrival') || '').trim(),
+      notes: String(data.get('notes') || '').trim(),
+    };
+    const normalizedErrors: Record<CustomerField, string> = {
+      name: normalizedCustomer.name ? '' : t.nameError,
+      email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedCustomer.email) ? '' : t.emailError,
+      phone: /^[+()\d\s-]+$/.test(normalizedCustomer.phone) && phoneDigitCount(normalizedCustomer.phone) >= 7 && phoneDigitCount(normalizedCustomer.phone) <= 15 ? '' : t.phoneError,
+    };
+    const firstInvalidField = (Object.keys(normalizedErrors) as CustomerField[]).find((field) => normalizedErrors[field]);
+    (form.elements.namedItem('name') as HTMLInputElement).value = normalizedCustomer.name;
+    (form.elements.namedItem('email') as HTMLInputElement).value = normalizedCustomer.email;
+    (form.elements.namedItem('phone') as HTMLInputElement).value = normalizedCustomer.phone;
+    if (firstInvalidField) {
+      setCustomerFieldErrors(normalizedErrors);
+      setError(t.customerFormError);
+      requestAnimationFrame(() => form.querySelector<HTMLInputElement>(`[name="${firstInvalidField}"]`)?.focus());
+      return;
+    }
     setLoading(true); setError('');
-    const data = new FormData(event.currentTarget);
     try {
       const result = await callApi<{ booking: Booking; accessToken: string; mailSent: boolean; adminMailSent?: boolean }>('reserve', {
         method: 'POST', body: JSON.stringify({
           startDate, endDate, startTime, endTime, billingMode, pickupLocation, people, carClass: selectedCar, insurancePlan, insurance: insurancePlan !== 'basic', childSeats,
-          additionalServices: extras, paymentMethod: 'onsite', name: data.get('name'), email: data.get('email'),
-          phone: data.get('phone'), arrival: data.get('arrival'), notes: data.get('notes'), language,
+          additionalServices: extras, paymentMethod: 'onsite', name: normalizedCustomer.name, email: normalizedCustomer.email,
+          phone: normalizedCustomer.phone, arrival: normalizedCustomer.arrival, notes: normalizedCustomer.notes, language,
         }),
       });
       setSuccess({ code: result.booking.code, accessToken: result.accessToken, mailSent: result.mailSent, adminMailSent: result.adminMailSent !== false });
@@ -334,7 +380,14 @@ export function ReservationSystem({ language }: { language: Language }) {
                 })}</div>
               </div>
               <div className="booking-step"><div className="booking-step-title"><span>04</span><h3>{t.customer}</h3></div>
-                <div className="customer-grid"><label><span className="field-label">{t.name}<em className="field-required">{t.requiredLabel}</em></span><input name="name" required /></label><label><span className="field-label">{t.email}<em className="field-required">{t.requiredLabel}</em></span><input name="email" type="email" required /></label><label><span className="field-label">{t.phone}<em className="field-required">{t.requiredLabel}</em></span><input name="phone" type="tel" required /></label><label>{t.arrival}<input name="arrival" /></label><label className="wide">{t.notes}<textarea name="notes" rows={3} /></label></div>
+                <p className="customer-form-intro">{t.customerIntro}</p>
+                <div className="customer-grid">
+                  <label className={customerFieldErrors.name ? 'field-invalid' : ''}><span className="field-label">{t.name}<em className="field-required">{t.requiredLabel}</em></span><input name="name" autoComplete="name" maxLength={80} placeholder={t.namePlaceholder} onBlur={(event) => validateCustomerInput('name', event.currentTarget)} onInput={() => customerFieldErrors.name && setCustomerFieldErrors((current) => ({ ...current, name: '' }))} aria-invalid={Boolean(customerFieldErrors.name)} aria-describedby="customer-name-help" required /><small id="customer-name-help" className={customerFieldErrors.name ? 'field-error' : 'field-support'} aria-live="polite">{customerFieldErrors.name || t.nameHint}</small></label>
+                  <label className={customerFieldErrors.email ? 'field-invalid' : ''}><span className="field-label">{t.email}<em className="field-required">{t.requiredLabel}</em></span><input name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} maxLength={180} placeholder={t.emailPlaceholder} onBlur={(event) => validateCustomerInput('email', event.currentTarget)} onInput={() => customerFieldErrors.email && setCustomerFieldErrors((current) => ({ ...current, email: '' }))} aria-invalid={Boolean(customerFieldErrors.email)} aria-describedby="customer-email-help" required /><small id="customer-email-help" className={customerFieldErrors.email ? 'field-error' : 'field-support'} aria-live="polite">{customerFieldErrors.email || t.emailHint}</small></label>
+                  <label className={customerFieldErrors.phone ? 'field-invalid' : ''}><span className="field-label">{t.phone}<em className="field-required">{t.requiredLabel}</em></span><input name="phone" type="tel" inputMode="tel" autoComplete="tel" maxLength={24} placeholder={t.phonePlaceholder} onBlur={(event) => validateCustomerInput('phone', event.currentTarget)} onInput={() => customerFieldErrors.phone && setCustomerFieldErrors((current) => ({ ...current, phone: '' }))} aria-invalid={Boolean(customerFieldErrors.phone)} aria-describedby="customer-phone-help" required /><small id="customer-phone-help" className={customerFieldErrors.phone ? 'field-error' : 'field-support'} aria-live="polite">{customerFieldErrors.phone || t.phoneHint}</small></label>
+                  <label><span className="field-label">{t.arrival}</span><input name="arrival" autoComplete="off" maxLength={120} placeholder={t.arrivalPlaceholder} /><small className="field-support">{t.arrivalHint}</small></label>
+                  <label className="wide"><span className="field-label">{t.notes}<small className="character-count">{notesLength}/500 {t.characters}</small></span><textarea name="notes" rows={3} maxLength={500} placeholder={t.notesPlaceholder} onInput={(event) => setNotesLength(event.currentTarget.value.length)} /><small className="field-support">{language === 'ja' ? '個人情報やカード番号は入力しないでください。' : 'Do not enter payment card or other sensitive information.'}</small></label>
+                </div>
               </div>
             </div>
             <aside className="reservation-summary">

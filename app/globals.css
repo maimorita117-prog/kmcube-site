@@ -331,6 +331,15 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
 .customer-grid .wide, .change-request .wide { grid-column: 1 / -1; }
 .field-label { display: flex; align-items: center; gap: 7px; }
 .field-required { padding: 3px 7px; color: #fff; background: var(--accent); border-radius: 999px; font-size: .64rem; font-style: normal; font-weight: 900; line-height: 1.2; }
+.customer-form-intro { margin: -2px 0 14px; color: #5b756c; font-size: .83rem; line-height: 1.7; }
+.customer-grid label { align-content: start; font-size: .875rem; }
+.customer-grid input::placeholder, .customer-grid textarea::placeholder { color: #91a09a; opacity: 1; }
+.customer-grid input:focus, .customer-grid textarea:focus { outline: 3px solid rgba(248, 187, 52, .3); border-color: var(--primary); }
+.customer-grid label.field-invalid input { color: #71372e; background: #fff9f7; border-color: #d66d5d; }
+.field-support, .field-error { min-height: 1.45em; font-size: .7rem; font-weight: 650; line-height: 1.55; }
+.field-support { color: #74877f; }
+.field-error { color: #b44739; }
+.character-count { margin-left: auto; color: #74877f; font-size: .68rem; font-weight: 700; }
 .reservation-summary { position: sticky; top: 20px; margin-top: 34px; padding: 27px 24px; color: #fff; background: #174c3f; border-radius: 22px 31px 22px 39px; box-shadow: 0 18px 38px rgba(19,60,49,.18); }
 .reservation-summary > p:first-child { margin: 0 0 7px; color: #f8cd51; font-family: Arial, sans-serif; font-size: .65rem; font-weight: 900; letter-spacing: .17em; }
 .reservation-summary h3 { margin: 0 0 20px; font-size: 1.25rem; }

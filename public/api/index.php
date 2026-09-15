@@ -67,9 +67,9 @@ try {
         $endTime = clean_text($body['endTime'] ?? '', 5);
         $billingMode = ($body['billingMode'] ?? 'daily') === 'hourly' ? 'hourly' : 'daily';
         $carClass = clean_text($body['carClass'] ?? '', 20);
-        $name = clean_text($body['name'] ?? '', 80);
+        $name = preg_replace('/\s+/u', ' ', clean_text($body['name'] ?? '', 80)) ?? '';
         $email = clean_text($body['email'] ?? '', 180);
-        $phone = clean_text($body['phone'] ?? '', 40);
+        $phone = normalize_phone($body['phone'] ?? '');
         if (!valid_date($start) || !valid_date($end) || !valid_time($startTime) || !valid_time($endTime) || $start < date('Y-m-d')) json_response(['ok' => false, 'message' => '利用日時をご確認ください。'], 422);
         $startAt = $start . ' ' . $startTime . ':00';
         $endAt = $end . ' ' . $endTime . ':00';
@@ -77,7 +77,9 @@ try {
         if ($endAt <= $startAt || ($billingMode === 'hourly' && $hours > 24)) json_response(['ok' => false, 'message' => '返却日時は出発日時より後にしてください。時間制は24時間以内です。'], 422);
         $car = find_vehicle($pdo, $carClass);
         if (!$car) json_response(['ok' => false, 'message' => '現在受付中の車両からお選びください。'], 422);
-        if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $phone === '') json_response(['ok' => false, 'message' => 'お名前、メールアドレス、電話番号をご確認ください。'], 422);
+        if ($name === '') json_response(['ok' => false, 'message' => 'お名前を入力してください。'], 422);
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) json_response(['ok' => false, 'message' => 'メールアドレスの形式をご確認ください。'], 422);
+        if (!valid_phone($phone)) json_response(['ok' => false, 'message' => '電話番号は数字7～15桁で入力してください。'], 422);
 
         $people = max(1, min(8, (int)($body['people'] ?? 1)));
         $allowedInsurancePlans = ['basic', 'standard', 'wide'];
