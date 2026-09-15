@@ -319,14 +319,15 @@ function mail_config(array $config): array
     return ['admin' => $adminEmail, 'shop' => $shopEmail, 'from' => $mailFrom, 'envelope' => $envelopeFrom, 'name' => $fromName];
 }
 
-function log_mail_delivery(string $bookingCode, string $recipientType, string $recipient, string $subject, bool $accepted, string $errorMessage = ''): void
+function log_mail_delivery(string $bookingCode, string $recipientType, string $recipient, string $subject, bool $accepted, string $errorMessage = '', string $transport = 'php-mail'): void
 {
     try {
-        $stmt = db()->prepare('INSERT INTO mail_delivery_log(booking_code, recipient_type, recipient, subject, accepted, transport, error_message, created_at) VALUES(:code,:type,:recipient,:subject,:accepted,"php-mail",:error,:created)');
+        $stmt = db()->prepare('INSERT INTO mail_delivery_log(booking_code, recipient_type, recipient, subject, accepted, transport, error_message, created_at) VALUES(:code,:type,:recipient,:subject,:accepted,:transport,:error,:created)');
         $stmt->execute([
             ':code' => clean_text($bookingCode, 40), ':type' => clean_text($recipientType, 20),
             ':recipient' => clean_text($recipient, 180), ':subject' => clean_text($subject, 240),
-            ':accepted' => $accepted ? 1 : 0, ':error' => clean_text($errorMessage, 500), ':created' => date('Y-m-d H:i:s'),
+            ':accepted' => $accepted ? 1 : 0, ':transport' => clean_text($transport, 80),
+            ':error' => clean_text($errorMessage, 500), ':created' => date('Y-m-d H:i:s'),
         ]);
     } catch (Throwable $logError) {
         error_log('[KMCUBE mail log] ' . $logError->getMessage());
@@ -354,18 +355,35 @@ function send_text_mail(string $to, string $subject, string $body, array $config
     ];
     $headerText = implode("\r\n", $headers);
     $envelopeOption = '-f' . $settings['envelope'];
-    $lastErrorBefore = error_get_last();
+    $accepted = false;
+    $transport = 'php-mail';
+    $attempts = [];
     if (function_exists('mb_send_mail')) {
+        $transport = 'mb_send_mail + Return-Path';
         $accepted = @mb_send_mail($to, $subject, $body, $headerText, $envelopeOption);
-    } else {
-        $encodedSubject = function_exists('mb_encode_mimeheader') ? mb_encode_mimeheader($subject, 'UTF-8') : $subject;
-        $accepted = @mail($to, $encodedSubject, $body, $headerText, $envelopeOption);
+        $attempts[] = $transport;
+        if (!$accepted) {
+            // Some Sakura shared-server configurations reject the optional
+            // sendmail parameter even though ordinary mb_send_mail is enabled.
+            $transport = 'mb_send_mail standard';
+            $accepted = @mb_send_mail($to, $subject, $body, $headerText);
+            $attempts[] = $transport;
+        }
     }
-    $lastErrorAfter = error_get_last();
+    if (!$accepted && function_exists('mail')) {
+        $encodedSubject = function_exists('mb_encode_mimeheader') ? mb_encode_mimeheader($subject, 'UTF-8') : $subject;
+        $transport = 'mail standard';
+        $accepted = @mail($to, $encodedSubject, $body, $headerText);
+        $attempts[] = $transport;
+    }
     $errorMessage = '';
-    if (!$accepted && $lastErrorAfter !== $lastErrorBefore && is_array($lastErrorAfter)) $errorMessage = (string)($lastErrorAfter['message'] ?? 'PHPのメール送信処理が失敗しました。');
-    if (!$accepted && $errorMessage === '') $errorMessage = 'PHPのメール送信処理が受け付けられませんでした。';
-    log_mail_delivery($bookingCode, $recipientType, $to, $subject, (bool)$accepted, $errorMessage);
+    if (!$accepted) {
+        $lastError = error_get_last();
+        if (is_array($lastError)) $errorMessage = (string)($lastError['message'] ?? '');
+        if ($errorMessage === '') $errorMessage = '利用可能なPHPメール送信方式をすべて試しましたが、受け付けられませんでした。';
+        if ($attempts) $errorMessage .= ' 試行方式: ' . implode(' → ', $attempts);
+    }
+    log_mail_delivery($bookingCode, $recipientType, $to, $subject, (bool)$accepted, $errorMessage, $transport);
     return (bool)$accepted;
 }
 
