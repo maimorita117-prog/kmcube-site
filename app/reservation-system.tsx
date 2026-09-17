@@ -35,7 +35,7 @@ const copy = {
     kicker: 'BOOKING & PRICE', title: '予約検索',
     intro: '日程を入力すると、空いている車両と概算料金を確認できます。民泊や体験の相談も同時に送れます。',
     bookTab: '新しく予約する', manageTab: '予約の照会・変更', hourly: '時間制', daily: '日数制', hourlyNote: '1～24時間。日額を上限に計算', dailyNote: '24時間単位で計算', start: '出発日', end: '返却日', startTime: '出発時刻', endTime: '返却時刻', pickup: '受取・返却場所', people: '利用人数',
-    search: '空車と料金を確認', searching: '確認中…', choose: '車両クラスを選択', available: '空車', unavailable: '満車', perDay: '1日・税込',
+    search: '空車と料金を確認', searching: '確認中…', choose: '車両クラスを選択', slideHint: '横にスワイプして車両を選ぶ', available: '空車', unavailable: '満車', perDay: '1日・税込',
     options: '保険・補償プランとオプション', insuranceIntro: '事故時の自己負担範囲を確認して、ご希望のプランを1つお選びください。',
     basicPlan: '基本補償', basicPlanPrice: '追加料金なし', basicPlanDesc: '対人・対物などの基本補償（貸渡料金に含む想定）', basicPlanLimit: '対物・車両の免責額とNOCはお客様負担',
     insurance: '安心保険プラン', insuranceDesc: '対物・車両の免責額を免除', insuranceLimit: 'NOC、タイヤ・ホイール、車内汚損などは対象外', recommended: 'おすすめ',
@@ -60,7 +60,7 @@ const copy = {
     kicker: 'BOOKING & PRICE', title: 'Booking search',
     intro: 'Enter your dates to see available vehicles and an estimated price. You can also request accommodation and activities.',
     bookTab: 'New booking', manageTab: 'Manage booking', hourly: 'Hourly', daily: 'Daily', hourlyNote: '1–24 hours, capped at the daily rate', dailyNote: 'Calculated in 24-hour units', start: 'Pick-up date', end: 'Return date', startTime: 'Pick-up time', endTime: 'Return time', pickup: 'Pick-up / return location', people: 'Travelers',
-    search: 'Check availability', searching: 'Checking…', choose: 'Choose a vehicle class', available: 'available', unavailable: 'Full', perDay: 'per day, tax included',
+    search: 'Check availability', searching: 'Checking…', choose: 'Choose a vehicle class', slideHint: 'Swipe sideways to choose a vehicle', available: 'available', unavailable: 'Full', perDay: 'per day, tax included',
     options: 'Insurance, coverage & options', insuranceIntro: 'Review your potential out-of-pocket costs and choose one plan.',
     basicPlan: 'Basic coverage', basicPlanPrice: 'No additional charge', basicPlanDesc: 'Basic liability coverage (planned to be included in the rental rate)', basicPlanLimit: 'You pay the policy excess and NOC',
     insurance: 'Peace-of-mind insurance plan', insuranceDesc: 'Waives the property and vehicle damage excess', insuranceLimit: 'NOC, tyres, wheels and interior damage are excluded', recommended: 'Recommended',
@@ -115,6 +115,8 @@ export function ReservationSystem({ language }: { language: Language }) {
   const [people, setPeople] = useState(2);
   const [cars, setCars] = useState(carDefaults);
   const [selectedCar, setSelectedCar] = useState('');
+  const [activeCarSlide, setActiveCarSlide] = useState(0);
+  const carSliderRef = useRef<HTMLDivElement>(null);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [apiReady, setApiReady] = useState(true);
@@ -155,6 +157,35 @@ export function ReservationSystem({ language }: { language: Language }) {
       .catch(() => { /* Local static preview keeps the initial sample catalog. */ });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    setActiveCarSlide((current) => Math.min(current, Math.max(0, cars.length - 1)));
+  }, [cars.length]);
+
+  function updateCarSlide(event: React.UIEvent<HTMLDivElement>) {
+    const slider = event.currentTarget;
+    const cards = Array.from(slider.querySelectorAll<HTMLElement>('[data-car-slide]'));
+    if (!cards.length) return;
+    const viewportCenter = slider.scrollLeft + slider.clientWidth / 2;
+    let nearestIndex = 0;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+    cards.forEach((card, index) => {
+      const distance = Math.abs(card.offsetLeft + card.offsetWidth / 2 - viewportCenter);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = index;
+      }
+    });
+    setActiveCarSlide(nearestIndex);
+  }
+
+  function scrollToCarSlide(index: number) {
+    const slider = carSliderRef.current;
+    const card = slider?.querySelectorAll<HTMLElement>('[data-car-slide]')[index];
+    if (!slider || !card) return;
+    slider.scrollTo({ left: card.offsetLeft - (slider.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' });
+    setActiveCarSlide(index);
+  }
 
   const hours = countHours(startDate, startTime, endDate, endTime);
   const billingUnits = billingMode === 'hourly' ? Math.max(1, hours) : Math.max(1, Math.ceil(hours / 24));
@@ -342,13 +373,15 @@ export function ReservationSystem({ language }: { language: Language }) {
           </form>
 
           <div className="booking-step"><div className="booking-step-title"><span>01</span><h3>{t.choose}</h3></div>
-            <div className="availability-cars">{cars.length === 0 && <p className="booking-error">{language === 'ja' ? '現在受付中の車両はありません。' : 'No vehicles are currently accepting bookings.'}</p>}{cars.map((car) => {
+            {cars.length > 1 && <div className="car-slider-guide" aria-hidden="true"><span className="car-slider-gesture">↔</span><span>{t.slideHint}</span></div>}
+            <div className="availability-cars" ref={carSliderRef} onScroll={updateCarSlide}>{cars.length === 0 && <p className="booking-error">{language === 'ja' ? '現在受付中の車両はありません。' : 'No vehicles are currently accepting bookings.'}</p>}{cars.map((car) => {
               const canSelect = searched && apiReady && car.available > 0;
-              return <button key={car.id} type="button" className={selectedCar === car.id ? 'selected' : ''} disabled={!canSelect} onClick={() => setSelectedCar(car.id)}>
+              return <button key={car.id} data-car-slide type="button" className={selectedCar === car.id ? 'selected' : ''} disabled={!canSelect} aria-pressed={selectedCar === car.id} onClick={() => setSelectedCar(car.id)}>
                 <span className="car-availability">{searched ? (car.available > 0 ? `${t.available} ${car.available}` : t.unavailable) : t.search}</span>
                 <span className="car-photo-frame">{car.imageUrl ? <img src={car.imageUrl} alt={language === 'ja' ? `${car.label}（${car.model}）の代表車両` : `Representative ${car.label} vehicle (${car.model})`} loading="lazy" /> : <CarFront aria-hidden="true" />}</span><small>{car.model}</small><strong>{car.label}</strong><b>{yen(billingMode === 'hourly' ? car.hourlyPrice : car.price)}<em> / {billingMode === 'hourly' ? t.hours : t.perDay}</em></b>
               </button>;
             })}</div>
+            {cars.length > 1 && <div className="car-slider-dots" aria-label={language === 'ja' ? '車両スライドの位置' : 'Vehicle slide position'}>{cars.map((car, index) => <button key={car.id} type="button" className={activeCarSlide === index ? 'active' : ''} aria-label={language === 'ja' ? `${car.label}を表示` : `Show ${car.label}`} aria-current={activeCarSlide === index ? 'true' : undefined} onClick={() => scrollToCarSlide(index)} />)}</div>}
           </div>
 
           <form className="booking-detail-form" onSubmit={submitBooking}>

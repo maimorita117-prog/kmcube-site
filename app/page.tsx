@@ -29,9 +29,9 @@ const rentalBookingLinkProps = {
 } as const;
 
 const serviceMeta = [
-  { number: '01', icon: CarFront, kicker: 'RENT A CAR', tone: 'yellow' },
-  { number: '02', icon: Coffee, kicker: 'SMALL CAFE', tone: 'coral' },
-  { number: '03', icon: BedDouble, kicker: 'ISLAND STAY', tone: 'green' },
+  { number: '01', kicker: 'RENT A CAR', tone: 'yellow', stageJa: 'めぐる', stageEn: 'DRIVE', image: './service-rental-illustration-v1.png', altJa: '荷物を載せた黄色いレンタカーの手描きイラスト', altEn: 'Hand-painted yellow rental car carrying travel bags' },
+  { number: '02', kicker: 'PAUSE CAFE', tone: 'coral', stageJa: 'ひと息', stageEn: 'PAUSE', image: './service-cafe-illustration-v1.png', altJa: '湯気が立つコーヒーカップと緑の葉の手描きイラスト', altEn: 'Hand-painted steaming coffee cup with a green leaf' },
+  { number: '03', kicker: 'ISLAND STAY', tone: 'green', stageJa: 'くつろぐ', stageEn: 'STAY', image: './service-stay-illustration-v1.png', altJa: '灯りがともる木造の民泊とシダの手描きイラスト', altEn: 'Hand-painted wooden guesthouse with warm glowing windows and a fern' },
 ];
 
 const translations = {
@@ -51,13 +51,13 @@ const translations = {
     servicesTitle1: '島の旅を、', servicesTitle2: 'やさしくつなぐ。', servicesIntro: '移動、休憩、宿泊を別々に探す手間を少なく。KMCUBEなら、屋久島で過ごす時間をひと続きに相談できます。',
     services: [
       { title: 'レンタカー', copy: '到着したら、すぐに島時間へ。旅程に合わせて使いやすい一台をご案内します。', note: 'オンラインで空車確認・予約', status: '予約受付中' },
-      { title: '簡易カフェ', copy: 'ドライブの途中に、ほっとひと息。屋久島の空気と一緒に楽しむ小さな休憩所です。', note: 'メニューは近日ご案内', status: 'COMING SOON' },
+      { title: '一息カフェ', copy: '島めぐりの途中に、深呼吸するようなひと休みを。屋久島の空気と一緒に味わう小さなカフェです。', note: 'メニューは近日ご案内', status: 'COMING SOON' },
       { title: '民泊', copy: 'たくさん遊んだあとは、ゆっくり休む。島で暮らすように泊まれる場所を整えています。', note: 'お部屋情報は近日ご案内', status: 'COMING SOON' },
     ],
     journeyTitle1: '「借りる」だけで終わらない、', journeyTitle2: '旅の入口へ。', journeyCopy: '朝、到着口で車を受け取る。好きな景色に立ち寄り、カフェでひと休み。夜は島の暮らしを感じる宿へ。ひとつの窓口だから、旅程の相談もすっきり。', journeyCta: '旅程からレンタカーを探す',
     route: [
       { title: '車を受け取る', note: '島めぐりのスタート' },
-      { title: 'カフェでひと息', note: '深呼吸したくなる休憩' },
+      { title: '一息カフェで休憩', note: '深呼吸したくなる島時間' },
       { title: '民泊でくつろぐ', note: '島の夜をゆっくり味わう' },
     ],
     companyTitle: '会社案内', companyIntro: '小さく始めて、屋久島の旅に必要なものを丁寧に育てていきます。',
@@ -82,7 +82,7 @@ const translations = {
     servicesTitle1: 'One gentle connection', servicesTitle2: 'for your island journey.', servicesIntro: 'Spend less time arranging transport, breaks, and accommodation separately. KMCUBE helps connect your time on Yakushima through one friendly point of contact.',
     services: [
       { title: 'Rental cars', copy: 'Start enjoying island time as soon as you arrive. We will help you find a practical car that fits your itinerary.', note: 'Check availability and book online', status: 'BOOKING OPEN' },
-      { title: 'Small café', copy: 'Pause and recharge during your drive with a small, welcoming place to enjoy the fresh island atmosphere.', note: 'Menu details coming soon', status: 'COMING SOON' },
+      { title: 'Hitoyasumi Café', copy: 'Pause and take a deep breath between island stops at our small café, surrounded by Yakushima’s fresh atmosphere.', note: 'Menu details coming soon', status: 'COMING SOON' },
       { title: 'Guesthouse stays', copy: 'After a full day of exploring, slow down and rest in a place that feels closer to everyday island life.', note: 'Room details coming soon', status: 'COMING SOON' },
     ],
     journeyTitle1: 'More than a rental car—', journeyTitle2: 'your gateway to the island.', journeyCopy: 'Pick up your car in the morning, stop wherever the scenery calls, take a café break, then settle into a stay that feels connected to island life. With one point of contact, planning stays simple.', journeyCta: 'Find a car for your itinerary',
@@ -286,21 +286,38 @@ export default function Home() {
           <div><p className="section-kicker">OUR SERVICES</p><h2>{t.servicesTitle1}<br />{t.servicesTitle2}</h2></div>
           <p>{t.servicesIntro}</p>
         </div>
-        <div className="service-grid" aria-label={language === 'ja' ? 'レンタカー、簡易カフェ、民泊のサービス一覧' : 'Rental car, small café, and guesthouse services'}>
-          {serviceMeta.map((service, index) => {
-            const Icon = service.icon;
-            const localized = t.services[index];
-            return (
-              <article className={`service-card ${service.tone}`} key={service.number}>
-                <div className="service-top"><span>{service.number}</span><b>{localized.status}</b></div>
-                <Icon aria-hidden="true" />
-                <p className="service-kicker">{service.kicker}</p>
-                <h3>{localized.title}</h3>
-                <p className="service-copy">{localized.copy}</p>
-                <p className="service-note"><Check aria-hidden="true" /> {localized.note}</p>
-              </article>
-            );
-          })}
+        <div className="service-stage">
+          <div className="service-route-track" aria-hidden="true">
+            <span className="service-route-line" />
+            <img className="service-route-car" src="./yellow-car-transparent.png" alt="" />
+            {serviceMeta.map((service) => (
+              <span className="service-route-stop" key={service.number}>
+                <i>{service.number}</i><b>{language === 'ja' ? service.stageJa : service.stageEn}</b>
+              </span>
+            ))}
+          </div>
+          <p className="service-swipe-hint" aria-hidden="true">{language === 'ja' ? '横にスワイプして、島の旅をめぐる' : 'Swipe to explore your island journey'} <span>→</span></p>
+          <div className="service-grid" aria-label={language === 'ja' ? 'レンタカー、一息カフェ、民泊のサービス一覧' : 'Rental car, Hitoyasumi Café, and guesthouse services'}>
+            {serviceMeta.map((service, index) => {
+              const localized = t.services[index];
+              return (
+                <article className={`service-card ${service.tone}`} key={service.number}>
+                  <div className="service-card-pattern" aria-hidden="true" />
+                  <div className="service-top"><span>{service.number}</span><b>{localized.status}</b></div>
+                  <div className="service-illustration">
+                    <img src={service.image} alt={language === 'ja' ? service.altJa : service.altEn} loading="lazy" />
+                  </div>
+                  <p className="service-kicker">{service.kicker}</p>
+                  <h3>{localized.title}</h3>
+                  <p className="service-copy">{localized.copy}</p>
+                  <div className="service-card-foot">
+                    <p className="service-note"><Check aria-hidden="true" /> {localized.note}</p>
+                    <span aria-hidden="true">{index < serviceMeta.length - 1 ? '→' : '●'}</span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </div>
       </section>
 

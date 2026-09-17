@@ -2,11 +2,21 @@
 return [
     'timezone' => 'Asia/Tokyo',
     'shop_name' => 'KMCUBE Yakushima',
-    'shop_email' => 'm-morita@nn-cube.com',
-    'admin_notification_email' => 'm-morita@nn-cube.com',
+    'shop_email' => 'booking@k-mcube.com',
+    'admin_notification_email' => 'booking@k-mcube.com',
     'mail_from_name' => 'KMCUBE Yakushima',
     'mail_from' => 'no-reply@k-mcube.com',
     'mail_envelope_from' => 'no-reply@k-mcube.com',
+    // PHP標準メールが利用できない場合は、さくらのSMTP認証送信を有効にします。
+    // smtp_host は「www5114」ではなく、契約時に設定した初期ドメイン（例: hp-cube.sakura.ne.jp）です。
+    // パスワードは公開・配布せず、サーバー上の config.local.php にだけ入力してください。
+    'smtp_enabled' => false,
+    'smtp_host' => 'hp-cube.sakura.ne.jp',
+    'smtp_port' => 587,
+    'smtp_secure' => 'tls',
+    'smtp_username' => 'no-reply@k-mcube.com',
+    'smtp_password' => 'CHANGE_ME_MAIL_PASSWORD',
+    'smtp_timeout' => 15,
     'admin_password' => 'CHANGE_ME_NOW',
     'base_url' => 'https://k-mcube.com',
     'cars' => [

@@ -7,9 +7,10 @@ KMCUBE 予約システム／さくらサーバー設定
 
 2. api/config.sample.php を複製して api/config.local.php を作成します。
    config.local.php を開き、次の4項目を必ず変更します。
-   shop_email      予約通知を受け取るメールアドレス（m-morita@nn-cube.com）
-   admin_notification_email  管理者通知専用アドレス（m-morita@nn-cube.com）
-   mail_from       k-mcube.com ドメインで作成した送信元メールアドレス
+   shop_email      お客様が返信する窓口メールアドレス（booking@k-mcube.com）
+   admin_notification_email  管理会社の予約通知先（booking@k-mcube.com）
+   mail_from       差出人メールアドレス（no-reply@k-mcube.com）
+   mail_envelope_from  配送元・Return-Path（no-reply@k-mcube.com）
    admin_password  管理画面専用の十分に長いパスワード
 
 3. api/storage と api/uploads/vehicles フォルダへPHPが書き込める権限を設定します。
@@ -26,13 +27,33 @@ KMCUBE 予約システム／さくらサーバー設定
    ・予約完了画面に予約番号と管理キーが表示される
    ・同じ日程の空車数が1台減る
    ・確認メールが届く
-   ・m-morita@nn-cube.com に管理会社向けの予約通知メールが届く
+   ・booking@k-mcube.com に管理会社向けの予約詳細メールが届く
    ・管理画面に予約が表示される
+   ・管理画面の予約状態が色分けされ、件数サマリーと日本語の状態名が表示される
+   ・「メール下書きを開く」でパソコンまたはスマートフォンのメーラーが起動し、予約内容入りの定型文を編集できる
+   ・予約状態の変更やメール下書きの表示だけでは、メールは自動送信されない
+   ・メール送信確認履歴をチェックして削除できる
    ・管理画面から車両写真を差し替えると、本サイトの車両カードも更新される
    ・照会、変更依頼、キャンセルが利用できる
 
 7. 予約後にメール欄が「送信確認が必要」となる場合でも、予約番号が表示され、管理画面に予約があれば登録は完了しています。
    その場合は config.local.php の mail_from に、さくらサーバーで作成した k-mcube.com ドメインのメールアドレスが設定されているか確認してください。
+
+8. PHP標準メールが失敗する場合は、さくらのSMTP認証送信を設定します。
+   さくらサーバー上の api/config.local.php に、次の項目を追加または変更してください。
+
+   'smtp_enabled' => true,
+   'smtp_host' => 'hp-cube.sakura.ne.jp',
+   'smtp_port' => 587,
+   'smtp_secure' => 'tls',
+   'smtp_username' => 'no-reply@k-mcube.com',
+   'smtp_password' => 'ここにメールアドレス作成時のメールパスワード',
+   'smtp_timeout' => 15,
+
+   smtp_host はサーバーのホスト名（www5114.sakura.ne.jp）ではなく、契約時の初期ドメインです。
+   smtp_username は作成済みの送信元メールアドレス、smtp_password はそのメールパスワードです。
+   パスワードは config.sample.php やメール、チャットには記載しないでください。
+   設定後、管理画面の「メール送信確認」からテストしてください。方式が「SMTP STARTTLS」、結果が「受付」になれば成功です。
 
 重要事項
 ・初回のみ、api/config.local.php の cars が車両マスターへ自動登録されます。
@@ -42,7 +63,9 @@ KMCUBE 予約システム／さくらサーバー設定
 ・予約履歴または満車設定がある車両を削除した場合は、履歴保護のため完全削除せず自動的に受付停止になります。
 ・安心保険プラン（insurance_per_day）、ワイド（insurance_wide_per_day）、チャイルドシート料金は api/config.local.php で変更できます。
 ・保険・補償プランは現在参考内容です。保険会社との契約・貸渡約款が確定したら、表示内容と適用条件を必ず正式内容へ更新してください。
-・既存の api/config.local.php を使う場合は、shop_email を m-morita@nn-cube.com に設定してください。
+・既存の api/config.local.php を使う場合は、shop_email と admin_notification_email を booking@k-mcube.com に設定してください。
+・mail_from と mail_envelope_from は no-reply@k-mcube.com に設定してください。
+・SMTP設定とメールパスワードは、必ずサーバー上の api/config.local.php だけに保存してください。
 ・管理画面の「空車・満車期間」で、整備や貸出停止の期間・台数を登録・編集・解除できます。
 ・満車設定は公開サイトの空車検索へ即時反映され、解除すると空車へ戻ります。
 ・既存の予約データベースには、時刻・料金体系・満車管理用の項目が自動追加されます。

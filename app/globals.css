@@ -168,25 +168,43 @@ html[lang="en"] .service-copy { min-height: 108px; }
 .section-kicker.light { color: #f8cd51; }
 .section-heading h2, .company-title h2, .closing h2, .journey-copy h2 { margin: 0; font-size: clamp(2.35rem, 4.2vw, 4rem); line-height: 1.28; letter-spacing: -.05em; }
 .section-heading > p { margin: 0; color: #536f65; font-size: 1rem; line-height: 2; }
-.service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
-.service-card { position: relative; overflow: hidden; min-height: 455px; padding: 28px 28px 26px; border: 1px solid #cbd7bd; border-radius: 31px 31px 64px 31px; }
-.service-card::after { content: ''; position: absolute; width: 160px; height: 160px; right: -55px; bottom: -55px; border-radius: 50%; opacity: .65; }
-.service-card.yellow { background: #f8e7a1; }
-.service-card.yellow::after { background: #e8c44d; }
-.service-card.coral { background: #f3b29e; }
-.service-card.coral::after { background: #e77e64; }
-.service-card.green { color: #fff; background: #296655; }
-.service-card.green::after { background: #16493d; }
+.services { position: relative; }
+.services .section-heading h2 { position: relative; width: fit-content; }
+.services .section-heading h2::after { content: ''; position: absolute; right: -38px; bottom: 8px; width: 30px; height: 10px; background: #f8cd51; border-radius: 50%; transform: rotate(-7deg); }
+.service-stage { position: relative; }
+.service-route-track { position: relative; z-index: 3; display: grid; grid-template-columns: repeat(3, 1fr); align-items: start; height: 80px; margin: 0 5% 15px; }
+.service-route-line { position: absolute; top: 22px; left: 14%; right: 14%; height: 4px; overflow: hidden; background: repeating-linear-gradient(90deg, #7b9d8d 0 11px, transparent 11px 19px); border-radius: 999px; }
+.service-route-stop { z-index: 2; display: grid; justify-items: center; gap: 5px; color: #47695e; font-size: .64rem; font-weight: 900; letter-spacing: .08em; }
+.service-route-stop i { display: grid; place-items: center; width: 46px; height: 46px; color: #fff; background: #1d5949; border: 5px solid #f7f4e9; border-radius: 50%; box-shadow: 0 5px 14px rgba(27,76,61,.18); font: 900 .64rem Arial, sans-serif; }
+.service-route-stop:nth-last-child(2) i { color: #183f35; background: #f8cd51; }
+.service-route-car { position: absolute; z-index: 4; top: -9px; left: 8%; width: 69px; height: auto; filter: drop-shadow(0 5px 7px rgba(24,63,53,.2)); animation: service-car-tour 8s cubic-bezier(.55,.04,.33,1) infinite; }
+.service-swipe-hint { display: none; }
+.service-grid { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(28px, 5vw, 72px); }
+.service-card { position: relative; isolation: isolate; min-width: 0; padding: 8px 7px 18px; transition: transform .28s ease; }
+.service-card:nth-child(1) { transform: rotate(-.7deg); }
+.service-card:nth-child(2) { transform: translateY(18px) rotate(.7deg); }
+.service-card:nth-child(3) { transform: rotate(-.5deg); }
+.service-card:hover { z-index: 3; transform: translateY(-8px) rotate(0); }
+.service-card-pattern { position: absolute; z-index: -1; top: 52px; left: 50%; width: min(100%, 292px); aspect-ratio: 1; border-radius: 43% 57% 62% 38% / 48% 38% 62% 52%; transform: translateX(-50%) rotate(-7deg); opacity: .72; }
+.service-card.yellow .service-card-pattern { background: #ffe785; }
+.service-card.coral .service-card-pattern { background: #ffc0aa; transform: translateX(-50%) rotate(8deg); }
+.service-card.green .service-card-pattern { background: #dbead2; transform: translateX(-50%) rotate(-3deg); }
 .service-top { display: flex; align-items: center; justify-content: space-between; }
-.service-top > span { display: grid; place-items: center; width: 42px; height: 42px; color: #fff; background: rgba(24,63,53,.84); border-radius: 50%; font-family: Arial, sans-serif; font-size: .72rem; font-weight: 900; }
+.service-top > span { display: grid; place-items: center; width: 42px; height: 42px; color: #fff; background: rgba(24,63,53,.88); border-radius: 50% 46% 52% 43%; font-family: Arial, sans-serif; font-size: .72rem; font-weight: 900; transform: rotate(-8deg); }
 .service-card.green .service-top > span { color: #183f35; background: #f8cd51; }
-.service-top b { padding: 6px 9px; color: #456359; background: rgba(255,255,255,.54); border-radius: 999px; font-family: Arial, sans-serif; font-size: .58rem; letter-spacing: .11em; }
-.service-card > svg { width: 61px; height: 61px; margin-top: 58px; stroke-width: 1.45; }
-.service-kicker { margin: 25px 0 6px; font-family: Arial, sans-serif; font-size: .63rem; font-weight: 900; letter-spacing: .18em; opacity: .66; }
+.service-top b { padding: 7px 10px; color: #38594f; background: rgba(255,255,255,.88); border-radius: 999px; box-shadow: 0 5px 16px rgba(37,77,62,.08); font-family: Arial, sans-serif; font-size: .58rem; letter-spacing: .11em; }
+.service-illustration { position: relative; display: grid; place-items: center; width: 100%; height: 238px; margin-top: 9px; }
+.service-illustration img { display: block; width: 112%; height: 112%; object-fit: contain; filter: drop-shadow(0 15px 13px rgba(33,68,56,.16)); transform-origin: 50% 78%; }
+.service-card.yellow .service-illustration img { animation: service-rental-drive 4.2s ease-in-out infinite; }
+.service-card.coral .service-illustration img { animation: service-cafe-breathe 4.8s ease-in-out infinite; }
+.service-card.green .service-illustration img { animation: service-stay-welcome 5.2s ease-in-out infinite; }
+.service-kicker { margin: 8px 0 6px; color: #557369; font-family: Arial, sans-serif; font-size: .63rem; font-weight: 900; letter-spacing: .18em; }
 .service-card h3 { margin: 0; font-size: 1.75rem; }
-.service-copy { min-height: 82px; margin: 16px 0 20px; line-height: 1.8; font-size: .91rem; font-weight: 550; }
+.service-copy { min-height: 86px; margin: 14px 0 18px; color: #42655a; line-height: 1.8; font-size: .91rem; font-weight: 550; }
+.service-card-foot { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .service-note { position: relative; z-index: 1; display: flex; align-items: center; gap: 7px; margin: 0; font-size: .75rem; font-weight: 800; }
 .service-note svg { width: 16px; }
+.service-card-foot > span { flex: 0 0 auto; color: #1d5949; font: 900 1.2rem Arial, sans-serif; }
 
 .journey-section { display: grid; grid-template-columns: 1fr .85fr; gap: clamp(70px, 9vw, 140px); align-items: center; padding: 125px max(20px, calc((100vw - 1180px)/2)); color: #fff; background: #174c3f; }
 .journey-copy > p:not(.section-kicker) { max-width: 590px; margin: 28px 0 32px; color: #c9ded6; line-height: 2; }
@@ -262,6 +280,7 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
 .booking-step-title { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
 .booking-step-title > span { display: grid; place-items: center; width: 34px; height: 34px; color: #183f35; background: var(--secondary); border-radius: 12px 15px 11px 14px; font-family: Arial, sans-serif; font-size: .72rem; font-weight: 900; transform: rotate(-4deg); }
 .booking-step-title h3 { margin: 0; font-size: 1.22rem; }
+.car-slider-guide, .car-slider-dots { display: none; }
 .availability-cars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
 .availability-cars button { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 4px 13px; min-height: 330px; padding: 11px 11px 18px; overflow: hidden; color: var(--foreground); background: #faf7ed; border: 2px solid #d4ddcb; border-radius: 21px 21px 42px 21px; cursor: pointer; text-align: left; transition: transform .2s ease, border-color .2s ease, background .2s ease; }
 .availability-cars button:not(:disabled):hover { transform: translateY(-3px); border-color: #7ea274; }
@@ -491,7 +510,20 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .section-heading h2, .company-title h2, .closing h2, .journey-copy h2 { font-size: 2.35rem; }
   .service-grid { display: flex; gap: 14px; overflow-x: auto; padding: 0 0 18px; scroll-padding-inline: 0; scroll-snap-type: x mandatory; overscroll-behavior-inline: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .service-grid::-webkit-scrollbar { display: none; }
-  .service-card, .service-card:last-child { grid-column: auto; flex: 0 0 min(82vw, 330px); min-height: 400px; scroll-snap-align: start; }
+  .service-stage { margin-inline: 0; padding: 0; }
+  .service-route-track { height: 70px; margin: 0 0 6px; }
+  .service-route-line { left: 15%; right: 15%; }
+  .service-route-stop b { font-size: .58rem; }
+  .service-route-stop i { width: 42px; height: 42px; border-width: 4px; }
+  .service-route-car { top: -5px; width: 58px; }
+  .service-swipe-hint { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: fit-content; margin: 0 0 12px; padding: 8px 12px; color: #174c3f; background: #fff3b8; border-radius: 999px; font-size: .73rem; font-weight: 850; }
+  .service-swipe-hint span { font-size: 1rem; animation: service-swipe-arrow 1.5s ease-in-out infinite; }
+  .service-grid { margin-inline: -14px; padding-inline: 14px; scroll-padding-inline: 14px; }
+  .service-grid::after { content: ''; flex: 0 0 1px; }
+  .service-card, .service-card:last-child { grid-column: auto; flex: 0 0 min(84vw, 340px); min-height: 468px; scroll-snap-align: start; scroll-snap-stop: always; transform: none; }
+  .service-card:hover { transform: none; }
+  .service-illustration { height: 225px; }
+  .service-card-pattern { top: 50px; width: 250px; }
   .journey-section { padding: 88px 20px; }
   .day-route li { grid-template-columns: 54px 1fr; gap: 12px; }
   .day-route li > span { width: 54px; height: 54px; border-width: 5px; }
@@ -505,9 +537,17 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .reservation-heading h2 { font-size: 2.2rem; }
   .reservation-tabs { display: grid; border-radius: 19px; }
   .reservation-tabs button { border-radius: 14px; }
-  .reservation-policies, .billing-mode, .availability-search, .availability-cars, .option-grid, .insurance-plan-grid, .extra-service-grid, .customer-grid, .lookup-form, .change-request { grid-template-columns: 1fr; }
+  .reservation-policies, .billing-mode, .availability-search, .option-grid, .insurance-plan-grid, .extra-service-grid, .customer-grid, .lookup-form, .change-request { grid-template-columns: 1fr; }
   .availability-search .button, .customer-grid .wide, .change-request .wide, .change-request .button { grid-column: auto; }
-  .availability-cars button { min-height: 0; }
+  .car-slider-guide { display: flex; align-items: center; justify-content: center; gap: 9px; width: fit-content; margin: -2px 0 11px; padding: 8px 13px; color: #174c3f; background: #fff1b8; border: 1px solid #efd167; border-radius: 999px; font-size: .78rem; font-weight: 800; }
+  .car-slider-gesture { display: inline-grid; place-items: center; width: 24px; height: 24px; color: #fff; background: var(--primary); border-radius: 50%; font-family: Arial, sans-serif; font-size: .9rem; animation: car-swipe-hint 1.7s ease-in-out infinite; }
+  .availability-cars { display: flex; gap: 12px; margin-inline: -19px; padding: 2px 19px 17px; overflow-x: auto; scroll-padding-inline: 19px; scroll-snap-type: x mandatory; overscroll-behavior-inline: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .availability-cars::-webkit-scrollbar { display: none; }
+  .availability-cars button { flex: 0 0 min(82vw, 330px); min-height: 0; scroll-snap-align: start; scroll-snap-stop: always; }
+  .car-slider-dots { display: flex; align-items: center; justify-content: center; gap: 0; min-height: 30px; margin-top: -6px; }
+  .car-slider-dots button { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; background: transparent; border: 0; cursor: pointer; }
+  .car-slider-dots button::before { width: 7px; height: 7px; content: ""; background: #b9c6b3; border-radius: 999px; transition: width .2s ease, background .2s ease; }
+  .car-slider-dots button.active::before { width: 22px; background: var(--primary); }
   .extra-service-grid label { min-height: 164px; }
   .insurance-plan-grid > label { min-height: 0; }
   .booking-detail-form { gap: 4px; }
@@ -550,4 +590,10 @@ footer > small { color: #91ada4; font-family: Arial, sans-serif; font-size: .66r
   .nagata-wildlife { left: 2%; top: 34%; width: 29%; height: 16%; }
   .visual-badge { left: -3px; border-width: 4px; }
 }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } .scroll-drive-car { display: none; } }
+@keyframes car-swipe-hint { 0%, 100% { transform: translateX(-2px); } 50% { transform: translateX(3px); } }
+@keyframes service-car-tour { 0% { left: 7%; transform: translateY(0) rotate(-2deg); } 44% { left: 46%; transform: translateY(-4px) rotate(1deg); } 55% { left: 46%; transform: translateY(-4px) rotate(1deg); } 92% { left: calc(93% - 69px); transform: translateY(1px) rotate(-1deg); } 100% { left: calc(93% - 69px); transform: translateY(1px) rotate(-1deg); } }
+@keyframes service-rental-drive { 0%, 100% { transform: translateX(-5px) translateY(1px) rotate(-1deg); } 42% { transform: translateX(6px) translateY(-4px) rotate(1deg); } 50% { transform: translateX(6px) translateY(-4px) rotate(1deg); } 58% { transform: translateX(2px) translateY(0) rotate(-.5deg); } }
+@keyframes service-cafe-breathe { 0%, 100% { transform: translateY(2px) rotate(-1deg) scale(1); filter: drop-shadow(0 15px 13px rgba(33,68,56,.16)); } 50% { transform: translateY(-8px) rotate(1deg) scale(1.025); filter: drop-shadow(0 20px 15px rgba(226,122,84,.22)); } }
+@keyframes service-stay-welcome { 0%, 100% { transform: translateY(1px) rotate(-.5deg); filter: drop-shadow(0 15px 13px rgba(33,68,56,.16)) brightness(1); } 50% { transform: translateY(-5px) rotate(.5deg); filter: drop-shadow(0 20px 17px rgba(226,167,65,.28)) brightness(1.07); } }
+@keyframes service-swipe-arrow { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } .scroll-drive-car { display: none; } .car-slider-gesture, .service-route-car, .service-illustration img, .service-swipe-hint span { animation: none; } }

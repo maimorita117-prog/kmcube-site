@@ -307,8 +307,8 @@ function client_rate_limit(PDO $pdo): void
 
 function mail_config(array $config): array
 {
-    $adminEmail = (string)($config['admin_notification_email'] ?? 'm-morita@nn-cube.com');
-    if (!filter_var($adminEmail, FILTER_VALIDATE_EMAIL) || strpos($adminEmail, 'CHANGE_ME') !== false) $adminEmail = 'm-morita@nn-cube.com';
+    $adminEmail = (string)($config['admin_notification_email'] ?? 'booking@k-mcube.com');
+    if (!filter_var($adminEmail, FILTER_VALIDATE_EMAIL) || strpos($adminEmail, 'CHANGE_ME') !== false) $adminEmail = 'booking@k-mcube.com';
     $shopEmail = (string)($config['shop_email'] ?? $adminEmail);
     if (!filter_var($shopEmail, FILTER_VALIDATE_EMAIL) || strpos($shopEmail, 'CHANGE_ME') !== false) $shopEmail = $adminEmail;
     $mailFrom = (string)($config['mail_from'] ?? 'no-reply@k-mcube.com');
@@ -316,7 +316,161 @@ function mail_config(array $config): array
     $envelopeFrom = (string)($config['mail_envelope_from'] ?? $mailFrom);
     if (!filter_var($envelopeFrom, FILTER_VALIDATE_EMAIL)) $envelopeFrom = $mailFrom;
     $fromName = preg_replace('/[\r\n]+/', ' ', clean_text($config['mail_from_name'] ?? 'KMCUBE Yakushima', 80)) ?? 'KMCUBE Yakushima';
-    return ['admin' => $adminEmail, 'shop' => $shopEmail, 'from' => $mailFrom, 'envelope' => $envelopeFrom, 'name' => $fromName];
+    $smtpEnabledValue = $config['smtp_enabled'] ?? false;
+    $smtpEnabled = is_bool($smtpEnabledValue)
+        ? $smtpEnabledValue
+        : in_array(strtolower(trim((string)$smtpEnabledValue)), ['1', 'true', 'yes', 'on'], true);
+    $smtpSecure = strtolower(trim((string)($config['smtp_secure'] ?? 'tls')));
+    if (!in_array($smtpSecure, ['tls', 'ssl', 'none'], true)) $smtpSecure = 'tls';
+    $smtpPort = (int)($config['smtp_port'] ?? ($smtpSecure === 'ssl' ? 465 : 587));
+    if ($smtpPort < 1 || $smtpPort > 65535) $smtpPort = $smtpSecure === 'ssl' ? 465 : 587;
+    $smtp = [
+        'enabled' => $smtpEnabled,
+        'host' => trim((string)($config['smtp_host'] ?? '')),
+        'port' => $smtpPort,
+        'secure' => $smtpSecure,
+        'username' => trim((string)($config['smtp_username'] ?? '')),
+        'password' => (string)($config['smtp_password'] ?? ''),
+        'timeout' => max(5, min(30, (int)($config['smtp_timeout'] ?? 15))),
+    ];
+    $smtp['configured'] = $smtp['enabled'] && $smtp['host'] !== '' && $smtp['username'] !== '' && $smtp['password'] !== '';
+    return ['admin' => $adminEmail, 'shop' => $shopEmail, 'from' => $mailFrom, 'envelope' => $envelopeFrom, 'name' => $fromName, 'smtp' => $smtp];
+}
+
+function smtp_read_response($socket): array
+{
+    $lines = [];
+    $code = 0;
+    for ($i = 0; $i < 50; $i++) {
+        $line = fgets($socket, 4096);
+        if ($line === false) {
+            $meta = stream_get_meta_data($socket);
+            $reason = !empty($meta['timed_out']) ? 'SMTPサーバーからの応答がタイムアウトしました。' : 'SMTPサーバーから応答を読み取れませんでした。';
+            throw new RuntimeException($reason);
+        }
+        $lines[] = rtrim($line, "\r\n");
+        if (preg_match('/^(\d{3})([ -])/', $line, $matches)) {
+            $code = (int)$matches[1];
+            if ($matches[2] === ' ') break;
+        }
+    }
+    return [$code, implode(' | ', $lines)];
+}
+
+function smtp_write_all($socket, string $data): void
+{
+    $length = strlen($data);
+    $written = 0;
+    while ($written < $length) {
+        $result = fwrite($socket, substr($data, $written));
+        if ($result === false || $result === 0) throw new RuntimeException('SMTPサーバーへデータを書き込めませんでした。');
+        $written += $result;
+    }
+}
+
+function smtp_command($socket, string $command, array $expectedCodes, string $label): array
+{
+    smtp_write_all($socket, $command . "\r\n");
+    [$code, $message] = smtp_read_response($socket);
+    if (!in_array($code, $expectedCodes, true)) {
+        throw new RuntimeException($label . 'に失敗しました（SMTP ' . $code . '）: ' . clean_text($message, 300));
+    }
+    return [$code, $message];
+}
+
+function smtp_send_text_mail(string $to, string $subject, string $body, array $settings, string $replyTo): array
+{
+    $smtp = $settings['smtp'];
+    if (empty($smtp['enabled'])) return [false, 'SMTP認証送信は無効です。', 'SMTP'];
+    if (empty($smtp['configured'])) return [false, 'SMTP設定が未完了です。smtp_host・smtp_username・smtp_passwordをご確認ください。', 'SMTP configuration'];
+    if (!function_exists('stream_socket_client')) return [false, 'このPHP環境ではSMTP接続機能を利用できません。', 'SMTP'];
+
+    $scheme = $smtp['secure'] === 'ssl' ? 'ssl' : 'tcp';
+    $transport = $smtp['secure'] === 'ssl' ? 'SMTP SSL/TLS' : ($smtp['secure'] === 'tls' ? 'SMTP STARTTLS' : 'SMTP AUTH');
+    $endpoint = $scheme . '://' . $smtp['host'] . ':' . $smtp['port'];
+    $context = stream_context_create([
+        'ssl' => [
+            'verify_peer' => true,
+            'verify_peer_name' => true,
+            'peer_name' => $smtp['host'],
+            'allow_self_signed' => false,
+        ],
+    ]);
+    $socket = null;
+    try {
+        $errorNumber = 0;
+        $errorMessage = '';
+        $socket = @stream_socket_client($endpoint, $errorNumber, $errorMessage, $smtp['timeout'], STREAM_CLIENT_CONNECT, $context);
+        if (!is_resource($socket)) {
+            throw new RuntimeException('SMTPサーバーへ接続できません（' . $errorNumber . '）: ' . clean_text($errorMessage, 240));
+        }
+        stream_set_timeout($socket, $smtp['timeout']);
+        [$greetingCode] = smtp_read_response($socket);
+        if ($greetingCode !== 220) throw new RuntimeException('SMTP接続が拒否されました（SMTP ' . $greetingCode . '）。');
+
+        $helloHost = preg_replace('/[^A-Za-z0-9.-]/', '', (string)($_SERVER['SERVER_NAME'] ?? 'k-mcube.com')) ?: 'k-mcube.com';
+        [, $capabilities] = smtp_command($socket, 'EHLO ' . $helloHost, [250], 'SMTP初期接続');
+        if ($smtp['secure'] === 'tls') {
+            smtp_command($socket, 'STARTTLS', [220], '暗号化接続');
+            $cryptoMethod = defined('STREAM_CRYPTO_METHOD_TLS_CLIENT') ? STREAM_CRYPTO_METHOD_TLS_CLIENT : STREAM_CRYPTO_METHOD_SSLv23_CLIENT;
+            if (@stream_socket_enable_crypto($socket, true, $cryptoMethod) !== true) {
+                throw new RuntimeException('SMTPの暗号化接続を開始できませんでした。');
+            }
+            [, $capabilities] = smtp_command($socket, 'EHLO ' . $helloHost, [250], '暗号化後のSMTP初期接続');
+        }
+
+        if (stripos($capabilities, 'AUTH') === false) throw new RuntimeException('SMTPサーバーが認証方式を案内していません。');
+        if (stripos($capabilities, 'LOGIN') !== false) {
+            smtp_command($socket, 'AUTH LOGIN', [334], 'SMTP認証開始');
+            smtp_command($socket, base64_encode($smtp['username']), [334], 'SMTPユーザー認証');
+            smtp_command($socket, base64_encode($smtp['password']), [235], 'SMTPパスワード認証');
+        } elseif (stripos($capabilities, 'PLAIN') !== false) {
+            smtp_command($socket, 'AUTH PLAIN ' . base64_encode("\0" . $smtp['username'] . "\0" . $smtp['password']), [235], 'SMTP認証');
+        } else {
+            throw new RuntimeException('対応可能なSMTP認証方式（LOGINまたはPLAIN）がありません。');
+        }
+
+        smtp_command($socket, 'MAIL FROM:<' . $settings['envelope'] . '>', [250], '差出人設定');
+        smtp_command($socket, 'RCPT TO:<' . $to . '>', [250, 251], '宛先設定');
+        smtp_command($socket, 'DATA', [354], '本文送信開始');
+
+        $encodedName = function_exists('mb_encode_mimeheader') ? mb_encode_mimeheader($settings['name'], 'UTF-8') : '=?UTF-8?B?' . base64_encode($settings['name']) . '?=';
+        $encodedSubject = function_exists('mb_encode_mimeheader') ? mb_encode_mimeheader($subject, 'UTF-8') : '=?UTF-8?B?' . base64_encode($subject) . '?=';
+        try {
+            $messageIdToken = bin2hex(random_bytes(12));
+        } catch (Throwable $randomError) {
+            $messageIdToken = str_replace('.', '', uniqid('', true));
+        }
+        $messageHost = preg_replace('/[^A-Za-z0-9.-]/', '', substr(strrchr($settings['from'], '@') ?: '@k-mcube.com', 1)) ?: 'k-mcube.com';
+        $headers = [
+            'Date: ' . date(DATE_RFC2822),
+            'Message-ID: <' . $messageIdToken . '@' . $messageHost . '>',
+            'From: ' . $encodedName . ' <' . $settings['from'] . '>',
+            'Sender: ' . $settings['envelope'],
+            'Reply-To: ' . $replyTo,
+            'To: ' . $to,
+            'Subject: ' . $encodedSubject,
+            'MIME-Version: 1.0',
+            'Content-Type: text/plain; charset=UTF-8',
+            'Content-Transfer-Encoding: 8bit',
+            'X-Mailer: KMCUBE Booking System',
+        ];
+        $normalizedBody = preg_replace("/\r\n|\r|\n/", "\r\n", $body) ?? $body;
+        $normalizedBody = preg_replace('/(?m)^\./', '..', $normalizedBody) ?? $normalizedBody;
+        smtp_write_all($socket, implode("\r\n", $headers) . "\r\n\r\n" . $normalizedBody . "\r\n.\r\n");
+        [$dataCode, $dataMessage] = smtp_read_response($socket);
+        if ($dataCode !== 250) throw new RuntimeException('メール本文が受理されませんでした（SMTP ' . $dataCode . '）: ' . clean_text($dataMessage, 300));
+        try {
+            smtp_command($socket, 'QUIT', [221], 'SMTP切断');
+        } catch (Throwable $quitError) {
+            // DATAが250で受理された後の切断失敗は、メール送信結果へ影響させません。
+        }
+        fclose($socket);
+        return [true, '', $transport];
+    } catch (Throwable $smtpError) {
+        if (is_resource($socket)) fclose($socket);
+        return [false, clean_text($smtpError->getMessage(), 500), $transport];
+    }
 }
 
 function log_mail_delivery(string $bookingCode, string $recipientType, string $recipient, string $subject, bool $accepted, string $errorMessage = '', string $transport = 'php-mail'): void
@@ -358,6 +512,16 @@ function send_text_mail(string $to, string $subject, string $body, array $config
     $accepted = false;
     $transport = 'php-mail';
     $attempts = [];
+    $smtpError = '';
+    if (!empty($settings['smtp']['enabled'])) {
+        [$accepted, $smtpError, $transport] = smtp_send_text_mail($to, $subject, $body, $settings, $replyTo);
+        $attempts[] = $transport;
+        if ($accepted) {
+            log_mail_delivery($bookingCode, $recipientType, $to, $subject, true, '', $transport);
+            return true;
+        }
+    }
+    if (function_exists('error_clear_last')) error_clear_last();
     if (function_exists('mb_send_mail')) {
         $transport = 'mb_send_mail + Return-Path';
         $accepted = @mb_send_mail($to, $subject, $body, $headerText, $envelopeOption);
@@ -381,6 +545,7 @@ function send_text_mail(string $to, string $subject, string $body, array $config
         $lastError = error_get_last();
         if (is_array($lastError)) $errorMessage = (string)($lastError['message'] ?? '');
         if ($errorMessage === '') $errorMessage = '利用可能なPHPメール送信方式をすべて試しましたが、受け付けられませんでした。';
+        if ($smtpError !== '') $errorMessage = 'SMTP: ' . $smtpError . ' / PHPメール: ' . $errorMessage;
         if ($attempts) $errorMessage .= ' 試行方式: ' . implode(' → ', $attempts);
     }
     log_mail_delivery($bookingCode, $recipientType, $to, $subject, (bool)$accepted, $errorMessage, $transport);
