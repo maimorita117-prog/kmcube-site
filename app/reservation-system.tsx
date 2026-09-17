@@ -424,16 +424,35 @@ export function ReservationSystem({ language }: { language: Language }) {
               </div>
             </div>
             <aside className="reservation-summary">
-              <p>YOUR BOOKING</p><h3>{t.summary}</h3>
-              <dl><div><dt>{currentCar?.label || t.choose}<small>{startDate || '—'} {startTime} → {endDate || '—'} {endTime}・{billingUnits}{billingMode === 'hourly' ? t.hours : t.days}</small></dt><dd>{yen(costs.base)}</dd></div>
-                <div><dt>{t.insurancePrice}<small>{insurancePlanLabel(insurancePlan)}</small></dt><dd>{yen(costs.coverage)}</dd></div><div><dt>{t.childPrice} × {childSeats}</dt><dd>{yen(costs.seat)}</dd></div>
-                {costs.services.map((service) => <div key={service.id} className="summary-service"><dt>{extraLabels.find((item) => item.id === service.id)?.label}<small>{service.quantity} × {yen(rates.services[service.id])}</small></dt><dd>{yen(service.amount)}</dd></div>)}
-                <div className="summary-total"><dt>{t.total}</dt><dd>{yen(costs.total)}</dd></div></dl>
+              <header className="summary-header">
+                <span className="summary-header-icon"><CarFront aria-hidden="true" /></span>
+                <span><p>YOUR BOOKING</p><h3>{t.summary}</h3></span>
+              </header>
+              <dl className="summary-list">
+                <div className="summary-item summary-vehicle">
+                  <span className="summary-item-icon"><CarFront aria-hidden="true" /></span>
+                  <dt><span>{currentCar?.label || t.choose}</span><small>{startDate || '—'} {startTime} → {endDate || '—'} {endTime}<br />{billingUnits}{billingMode === 'hourly' ? t.hours : t.days}・税込</small></dt>
+                  <dd>{yen(costs.base)}</dd>
+                </div>
+                <div className="summary-item">
+                  <span className="summary-item-icon"><ShieldCheck aria-hidden="true" /></span>
+                  <dt><span>{t.insurancePrice}</span><small>{insurancePlanLabel(insurancePlan)}</small></dt>
+                  <dd>{yen(costs.coverage)}</dd>
+                </div>
+                <div className="summary-item">
+                  <span className="summary-item-icon"><Users aria-hidden="true" /></span>
+                  <dt><span>{t.childPrice}</span><small>{language === 'ja' ? `${childSeats}台を選択` : `${childSeats} selected`}</small></dt>
+                  <dd>{yen(costs.seat)}</dd>
+                </div>
+                {costs.services.map((service) => <div key={service.id} className="summary-item summary-service"><span className="summary-item-icon"><Check aria-hidden="true" /></span><dt><span>{extraLabels.find((item) => item.id === service.id)?.label}</span><small>{service.quantity} × {yen(rates.services[service.id])}</small></dt><dd>{yen(service.amount)}</dd></div>)}
+              </dl>
+              <div className="summary-total"><span><small>{language === 'ja' ? 'TAX INCLUDED' : 'TAX INCLUDED'}</small><strong>{t.total}</strong></span><b>{yen(costs.total)}</b></div>
               <p className="summary-note">{t.tentative}</p>
-              <fieldset><legend>{t.payment}</legend><label className="payment-active"><input type="radio" checked readOnly /><CreditCard aria-hidden="true" />{t.onsite}</label><label className="payment-disabled"><input type="radio" disabled />{t.online}<small>{t.onlineSoon}</small></label></fieldset>
-              <label className="terms-check"><input type="checkbox" required />{t.agree}</label>
+              <fieldset className="payment-methods"><legend>{t.payment}</legend><label className="payment-active"><input type="radio" checked readOnly /><span className="payment-icon"><CreditCard aria-hidden="true" /></span><span><strong>{t.onsite}</strong><small>{language === 'ja' ? 'ご利用当日にお支払い' : 'Pay on the day of use'}</small></span><Check className="payment-check" aria-hidden="true" /></label><label className="payment-disabled"><input type="radio" disabled /><span><strong>{t.online}</strong><small>{t.onlineSoon}</small></span></label></fieldset>
+              <label className="terms-check"><input type="checkbox" required /><span>{t.agree}<small>{language === 'ja' ? '予約の前に必ずご確認ください' : 'Please review before booking'}</small></span></label>
               {error && <p className="booking-error" role="alert">{error}</p>}
               <button className="button button-accent" disabled={loading || !apiReady || !selectedCar}>{loading ? t.submitting : t.submit} <ArrowRight aria-hidden="true" /></button>
+              <p className="summary-submit-note">{language === 'ja' ? '入力内容を送信後、確認メールをお送りします。' : 'A confirmation email will be sent after submission.'}</p>
             </aside>
           </form>
         </>}
