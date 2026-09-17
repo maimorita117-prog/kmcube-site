@@ -48,6 +48,7 @@ function db(): PDO
         base_price INTEGER NOT NULL,
         total INTEGER NOT NULL,
         change_request TEXT,
+        assigned_staff_id INTEGER,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         cancelled_at TEXT
@@ -61,11 +62,21 @@ function db(): PDO
         'start_at' => 'ALTER TABLE bookings ADD COLUMN start_at TEXT',
         'end_at' => 'ALTER TABLE bookings ADD COLUMN end_at TEXT',
         'insurance_plan' => 'ALTER TABLE bookings ADD COLUMN insurance_plan TEXT NOT NULL DEFAULT "standard"',
+        'assigned_staff_id' => 'ALTER TABLE bookings ADD COLUMN assigned_staff_id INTEGER',
     ];
     foreach ($migrations as $column => $sql) if (!in_array($column, $columns, true)) $pdo->exec($sql);
     if ($insurancePlanColumnAdded) $pdo->exec('UPDATE bookings SET insurance_plan = CASE WHEN insurance = 1 THEN "standard" ELSE "basic" END');
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_booking_dates ON bookings(car_class, start_date, end_date, status)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_booking_times ON bookings(car_class, start_at, end_at, status)');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_booking_staff ON bookings(assigned_staff_id, status, start_date)');
+    $pdo->exec('CREATE TABLE IF NOT EXISTS staff_members (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    )');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_staff_active_name ON staff_members(active, name)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS vehicles (
         id TEXT PRIMARY KEY,
         label TEXT NOT NULL,
